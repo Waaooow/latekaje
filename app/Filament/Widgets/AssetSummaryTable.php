@@ -17,10 +17,18 @@ class AssetSummaryTable extends BaseWidget
     {
         return $table
             ->query(
+                // 🟢 REVISI SAKTI: Jalur query disesuaikan dengan struktur kolom database yang benar
                 Asset::query()->withCount([
-                    'assetItems as ready_unit' => fn ($query) => $query->where('status', 'tersedia'),
+                    'assetItems', // Untuk kolom 'Total Unit' secara realtime
+                    
+                    // 🟢 Tersedia (Ready) = Status tersedia DAN Kondisi harus Baik
+                    'assetItems as ready_unit' => fn ($query) => $query->where('status', 'tersedia')->where('kondisi', 'baik'),
+                    
+                    // 🟢 Dipinjam Siswa = Status dipinjam
                     'assetItems as dipinjam_unit' => fn ($query) => $query->where('status', 'dipinjam'),
-                    'assetItems as rusak_unit' => fn ($query) => $query->where('status', 'rusak'),
+                    
+                    // 🟢 Rusak (Di Gudang) = Kondisi rusak ATAU rusak_total (diambil dari kolom kondisi)
+                    'assetItems as rusak_unit' => fn ($query) => $query->whereIn('kondisi', ['rusak', 'rusak_total']),
                 ])
             )
             ->columns([
@@ -32,7 +40,8 @@ class AssetSummaryTable extends BaseWidget
                     ->label('Nama Perangkat / Alat')
                     ->searchable(),
 
-                TextColumn::make('stok')
+                // 🟢 REVISI: Mengubah 'stok' menjadi 'asset_items_count' agar sinkron dengan data riil
+                TextColumn::make('asset_items_count')
                     ->label('Total Unit')
                     ->badge()
                     ->color('gray')

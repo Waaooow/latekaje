@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Asset extends Model
 {
+    // 🟢 PERBAIKAN: Masukkan 'kegunaan' ke dalam list izin mass assignment
     protected $fillable = [
         'nama_alat',
         'kode_aset',
@@ -14,12 +15,11 @@ class Asset extends Model
         'jenis',
         'status',
         'stok',
+        'kegunaan', 
     ];
 
     public function assetItems(): HasMany
     {
         return $this->hasMany(AssetItem::class);
     }
-
-
 }

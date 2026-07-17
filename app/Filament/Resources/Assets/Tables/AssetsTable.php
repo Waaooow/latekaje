@@ -12,8 +12,9 @@ class AssetsTable
     {
         return $table
             ->query(
-                // 🟢 PERUBAHAN DI SINI: Query sekarang menghitung berdasarkan kolom 'kondisi'
+                // Menggunakan hitungan total & kondisi secara realtime (Anti-kepentok)
                 \App\Models\Asset::query()->withCount([
+                    'assetItems', 
                     'assetItems as unit_baik' => fn ($query) => $query->where('kondisi', 'baik'),
                     'assetItems as unit_rusak' => fn ($query) => $query->where('kondisi', 'rusak'),
                     'assetItems as unit_rusak_total' => fn ($query) => $query->where('kondisi', 'rusak_total'),
@@ -65,12 +66,24 @@ class AssetsTable
                         ";
                     }),
 
-                TextColumn::make('stok')
+                // Menampilkan 'asset_items_count' hasil kalkulasi dinamis database
+                TextColumn::make('asset_items_count')
                     ->label('Jumlah Total')
                     ->badge()
                     ->color('gray')
                     ->alignCenter()
                     ->sortable(),
+            ])
+            
+            // JALUR ABSOLUT: Mengunci Edit & Delete untuk tabel induk katalog
+            ->actions([
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\DeleteAction::make(),
+            ])
+
+            // 🟢 FIX FINAL: Memanggil langsung DeleteBulkAction dari rumpun utama Filament\Actions
+            ->bulkActions([
+                \Filament\Actions\DeleteBulkAction::make(),
             ]);
     }
 }

@@ -7,6 +7,12 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Grouping\Group;
 use Illuminate\Database\Eloquent\Builder;
 
+// Namespace untuk Actions di atas Header Tabel (Filament v5)
+use Filament\Actions\ImportAction;
+use Filament\Actions\ExportAction;
+use App\Filament\Imports\AssetItemImporter;
+use App\Filament\Exports\AssetItemExporter;
+
 class AssetItemsTable
 {
     public static function configure(Table $table): Table
@@ -14,7 +20,7 @@ class AssetItemsTable
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['activeLoan', 'asset']))
 
-            // 🟢 Tetap pertahankan pengelompokan (grouping) biar terbagi per alat seperti di screenshot
+            // Tetap pertahankan pengelompokan (grouping) biar terbagi per alat
             ->defaultGroup(
                 Group::make('asset.nama_alat')
                     ->label('Nama Alat / Perangkat')
@@ -33,7 +39,7 @@ class AssetItemsTable
 
                 TextColumn::make('nomor_seri_atau_qr')
                     ->label('Nomor Seri / QR')
-                    ->description(fn ($record) => $record->asset?->spesifikasi) // Menampilkan tipe/spesifikasi persis di bawah nomor seri
+                    ->description(fn ($record) => $record->asset?->spesifikasi) 
                     ->searchable()
                     ->sortable(),
 
@@ -41,6 +47,7 @@ class AssetItemsTable
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
+                        'let tersedia' => 'success',
                         'tersedia' => 'success',
                         'dipinjam' => 'warning',
                         default => 'gray',
@@ -86,9 +93,33 @@ class AssetItemsTable
                     ->sortable(),
             ])
 
-            // 🟢 Dibuat default kosong tanpa filter dropdown bertumpuk agar UI minimalis & responsif
             ->filters([
-                //
+                // Dibuat kosong sesuai request awal agar UI responsif
+            ])
+
+            ->headerActions([
+                ImportAction::make()
+                    ->importer(AssetItemImporter::class)
+                    ->label('Import Excel')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('warning'),
+
+                ExportAction::make()
+                    ->exporter(AssetItemExporter::class)
+                    ->label('Unduh Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+            ])
+
+            // JALUR ABSOLUT: Mengunci Edit & Delete agar aman dari konflik v5
+            ->actions([
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\DeleteAction::make(),
+            ])
+
+            // 🟢 FIX FINAL: Memanggil langsung DeleteBulkAction dari rumpun utama Filament\Actions
+            ->bulkActions([
+                \Filament\Actions\DeleteBulkAction::make(),
             ]);
     }
 }

@@ -28,12 +28,37 @@ class AssetItem extends Model
         return $this->hasMany(Loan::class);
     }
 
-        /**
+    /**
     * Mengambil data peminjaman yang statusnya masih aktif (belum dikembalikan)
     */
-    public function activeLoan(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function activeLoan(): HasOne
     {
         // Relasi ke model Loan, mencari yang statusnya 'aktif'
         return $this->hasOne(Loan::class)->where('status', 'aktif');
+    }
+
+    /**
+     * ⚡ OTOMATISASI HITUNG STOK (SINKRONISASI REAL-TIME)
+     * Berjalan otomatis menghitung ulang jumlah item ketika ada unit yang ditambah, diedit, atau dihapus
+     */
+    protected static function booted(): void
+    {
+        // Trigger saat data item ditambah atau diubah
+        static::saved(function ($assetItem) {
+            if ($assetItem->asset) {
+                $assetItem->asset->update([
+                    'stok' => $assetItem->asset->assetItems()->count()
+                ]);
+            }
+        });
+
+        // Trigger saat data item dihapus dari lab
+        static::deleted(function ($assetItem) {
+            if ($assetItem->asset) {
+                $assetItem->asset->update([
+                    'stok' => $assetItem->asset->assetItems()->count()
+                ]);
+            }
+        });
     }
 }

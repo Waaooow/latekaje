@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class LoanResource extends Resource
 {
@@ -26,6 +27,17 @@ class LoanResource extends Resource
     protected static ?string $pluralModelLabel = 'peminjaman';
 
     protected static ?string $recordTitleAttribute = 'Pinjaman';
+
+    /**
+     * 🟢 REVISI SKENARIO KIOSK:
+     * Karena menggunakan 1 akun bersama untuk banyak siswa, filter nama terikat dimatikan.
+     * Semua data dibuka agar riwayat yang diinput siswa langsung muncul di tabel utama,
+     * dan mereka tinggal mencari nama mereka sendiri menggunakan fitur Search global.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery();
+    }
 
     public static function form(Schema $schema): Schema
     {

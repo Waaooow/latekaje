@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Loans\Schemas;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
-use App\Models\AssetItem; // KUNCI: Panggil model AssetItem langsung
+use App\Models\AssetItem;
 
 class LoanForm
 {
@@ -17,26 +17,22 @@ class LoanForm
                     ->label('Pilih Unit Barang / Scan QR')
                     ->searchable()
                     ->required()
-                    // 1. Ambil alih sistem pencarian agar mendukung pencarian lintas tabel (Relasi)
                     ->getSearchResultsUsing(function (string $search): array {
                         return AssetItem::query()
-                            ->where('status', 'tersedia') // Hanya barang ready
+                            ->where('status', 'tersedia')
                             ->where(function ($query) use ($search) {
-                                // Cari berdasarkan Nomor Seri/QR lokal...
                                 $query->where('nomor_seri_atau_qr', 'like', "%{$search}%")
-                                    // ...ATAU cari menembus tabel 'assets' berdasarkan 'nama_alat'
                                     ->orWhereHas('asset', function ($q) use ($search) {
                                         $q->where('nama_alat', 'like', "%{$search}%");
                                     });
                             })
                             ->limit(50)
                             ->get()
-                            ->mapWithKeys(fn ($record) => [
+                            ->mapWithKeys(fn($record) => [
                                 $record->id => self::formatLabel($record)
                             ])
                             ->toArray();
                     })
-                    // 2. Mengambil label yang sesuai saat data dimuat (misal saat edit halaman)
                     ->getOptionLabelUsing(function ($value): ?string {
                         $record = AssetItem::find($value);
                         return $record ? self::formatLabel($record) : null;
@@ -45,13 +41,13 @@ class LoanForm
                 TextInput::make('nama_siswa')
                     ->label('Nama Lengkap Siswa')
                     ->required()
-                    ->placeholder('Masukkan nama siswa peminjam...'),
-
+                    ->placeholder('Masukkan nama lengkap kamu...'),
+                // 🟢 KELAS: Dibiarkan bisa diketik bebas agar siswa bisa menginput kelasnya saat ini
                 TextInput::make('kelas')
                     ->label('Kelas')
                     ->required()
                     ->placeholder('Contoh: XII TJKT 2'),
-                ]);
+            ]);
     }
 
     /**

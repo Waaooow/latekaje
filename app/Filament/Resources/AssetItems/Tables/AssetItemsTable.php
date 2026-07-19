@@ -7,15 +7,20 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Grouping\Group;
 use Illuminate\Database\Eloquent\Builder;
 
-// Namespace untuk Actions di atas Header Tabel (Filament v5)
+// 🟢 KUNCI DI VERSI BARU: Semua jenis Action melebur jadi satu di rumpun ini
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ImportAction;
 use Filament\Actions\ExportAction;
+
 use App\Filament\Imports\AssetItemImporter;
 use App\Filament\Exports\AssetItemExporter;
-
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\BulkAction;
+use App\Models\AssetItem;
 use Illuminate\Database\Eloquent\Collection;
+use Filament\Forms\Components\Select;
 
 class AssetItemsTable
 {
@@ -98,7 +103,7 @@ class AssetItemsTable
             ])
 
             ->filters([
-                // Dibuat kosong sesuai request awal agar UI responsif
+                // Kosong agar UI responsif
             ])
 
             ->headerActions([
@@ -114,22 +119,19 @@ class AssetItemsTable
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success'),
 
-                // 🟢 TAMBAHKAN INI: Tombol Cetak Massal Global di Atas Tabel
-                \Filament\Actions\Action::make('printAllQr')
+                Action::make('printAllQr')
                     ->label('Cetak Semua QR')
                     ->icon('heroicon-o-printer')
-                    ->color('info') // Warna biru biar beda dari yang lain
+                    ->color('info')
                     ->url(route('print.qr', ['ids' => 'all']))
                     ->openUrlInNewTab(),
             ])
 
-            // JALUR ABSOLUT: Mengunci Edit & Delete agar aman dari konflik v5
             ->actions([
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
 
-                // 🟢 TAMBAHKAN INI: Tombol Cetak QR Satuan di Baris Tabel
-                \Filament\Actions\Action::make('printQr')
+                Action::make('printQr')
                     ->label('Cetak QR')
                     ->icon('heroicon-o-printer')
                     ->color('success')
@@ -137,21 +139,40 @@ class AssetItemsTable
                     ->openUrlInNewTab(),
             ])
 
-            // 🟢 FIX FINAL: Memanggil langsung DeleteBulkAction dari rumpun utama Filament\Actions
             ->bulkActions([
-                \Filament\Actions\DeleteBulkAction::make(),
+                DeleteBulkAction::make(),
 
-                // 🟢 TAMBAHKAN INI: Fitur Cetak QR Massal lewat Ceklis
-                \Filament\Actions\BulkAction::make('printBulkQr')
+                BulkAction::make('printBulkQr')
                     ->label('Cetak QR Terpilih')
                     ->icon('heroicon-o-printer')
                     ->color('success')
                     ->action(function (Collection $records) {
-                        // Gabungkan semua ID item yang diceklis menjadi string (misal: "1,3,5")
                         $ids = $records->pluck('id')->implode(',');
-
-                        // Redirect aman ke tab cetak baru
                         return redirect()->away(route('print.qr', ['ids' => $ids]));
+                    }),
+
+                BulkAction::make('pindahRuanganMassal')
+                    ->label('Pindahkan Ruangan')
+                    ->icon('heroicon-o-arrows-right-left')
+                    ->color('warning')
+                    ->form([
+                        Select::make('lokasi_baru')
+                            ->label('Pilih Ruangan Tujuan')
+                            ->options([
+                                'gudang' => '📦 Gudang',
+                                'ruang_kantor' => '🏢 Kantor',
+                                'lab_tjkt' => '💻 Lab TJKT',
+                                'lab_kkpi' => '🖥️ Lab KKPI',
+                                'lab_fo' => '⚡ Lab FO',
+                            ])
+                            ->required(),
+                    ])
+                    ->action(function (Collection $records, array $data): void {
+                        $records->each(function (AssetItem $record) use ($data) {
+                            $record->update([
+                                'lokasi' => $data['lokasi_baru'],
+                            ]);
+                        });
                     }),
             ]);
     }

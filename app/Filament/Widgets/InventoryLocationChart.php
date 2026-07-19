@@ -15,6 +15,7 @@ class InventoryLocationChart extends ChartWidget
 
     protected function getData(): array
     {
+        // Tarik semua variasi lokasi yang ada di database secara realtime
         $data = AssetItem::select('lokasi', DB::raw('count(*) as total'))
             ->whereNotNull('lokasi')
             ->where('lokasi', '!=', '')
@@ -22,31 +23,44 @@ class InventoryLocationChart extends ChartWidget
             ->pluck('total', 'lokasi')
             ->toArray();
 
-        // Hitung total seluruh ruangan untuk porsi persentase
         $totalAll = array_sum($data);
 
         $labels = [];
         $values = [];
         $colors = [];
 
-        $ruanganMap = [
+        // Standar nama dan kode warna untuk lokasi bawaan sistem
+        $standardMap = [
             'ruang_kantor' => ['label' => 'Ruang Kantor', 'color' => '#3b82f6'],
             'lab_tjkt'     => ['label' => 'Lab TJKT', 'color' => '#10b981'],
             'lab_kkpi'     => ['label' => 'Lab KKPI', 'color' => '#f59e0b'],
             'lab_fo'       => ['label' => 'Lab FO', 'color' => '#8b5cf6'],
             'gudang'       => ['label' => 'Gudang (Karantina)', 'color' => '#f43f5e'],
-            'lainnya'      => ['label' => 'Lainnya', 'color' => '#6b7280'],
         ];
 
-        foreach ($ruanganMap as $key => $info) {
-            if (isset($data[$key]) && $data[$key] > 0) {
-                $count = $data[$key];
-                $pct = $totalAll > 0 ? round(($count / $totalAll) * 100) : 0;
-                
-                // 🟢 MENYUNTIKKAN DATA INSTAN KE LABEL LEGENDA
-                $labels[] = "{$info['label']}: {$count} U ({$pct}%)";
+        // Palet warna otomatis untuk menampung lokasi-lokasi kustom baru
+        $customColors = ['#ec4899', '#14b8a6', '#f97316', '#6366f1', '#a855f7', '#6b7280'];
+        $customColorIdx = 0;
+
+        foreach ($data as $lokasiKey => $count) {
+            if ($count <= 0) continue;
+
+            $pct = $totalAll > 0 ? round(($count / $totalAll) * 100) : 0;
+
+            // Jika lokasi merupakan opsi standar
+            if (array_key_exists($lokasiKey, $standardMap)) {
+                $labels[] = "{$standardMap[$lokasiKey]['label']}: {$count} U ({$pct}%)";
                 $values[] = $count;
-                $colors[] = $info['color'];
+                $colors[] = $standardMap[$lokasiKey]['color'];
+            } else {
+                // 🟢 AUTO-SYNC: Jika teks kustom, ubah format tulisan agar rapi dan beri warna dinamis
+                $friendlyName = ucwords(str_replace('_', ' ', $lokasiKey));
+                $labels[] = "🏫 {$friendlyName}: {$count} U ({$pct}%)";
+                $values[] = $count;
+                
+                // Ambil warna dari palet cadangan secara bergiliran
+                $colors[] = $customColors[$customColorIdx % count($customColors)];
+                $customColorIdx++;
             }
         }
 

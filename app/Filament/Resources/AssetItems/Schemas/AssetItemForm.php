@@ -59,7 +59,6 @@ class AssetItemForm
                     ->required()
                     ->unique(ignoreRecord: true),
 
-                // 🟢 SUDAH DI-FIX: Baris 'folders' yang nyasar sudah dibuang!
                 Select::make('status')
                     ->label('Status Ketersediaan')
                     ->options([
@@ -80,12 +79,15 @@ class AssetItemForm
                     ->default('baik')
                     ->live()
                     ->afterStateUpdated(function ($state, $set) {
+                        // Jika alat rusak, otomatis arahkan dropdown ke gudang & isi teks lokasi dengan gudang
                         if (in_array($state, ['rusak', 'rusak_total'])) {
+                            $set('lokasi_select', 'gudang');
                             $set('lokasi', 'gudang');
                         }
                     }),
 
-                Select::make('lokasi')
+                // 🟢 DROPDOWN UTAMA (Hanya untuk kontrol UI, tidak disimpan ke DB)
+                Select::make('lokasi_select')
                     ->label('Lokasi Penempatan')
                     ->options([
                         'gudang' => 'Gudang (Penyimpanan/Rusak)',
@@ -93,10 +95,41 @@ class AssetItemForm
                         'lab_tjkt' => 'Laboratorium TJKT',
                         'lab_kkpi' => 'Laboratorium KKPI',
                         'lab_fo' => 'Laboratorium Fiber Optic',
-                        'lainnya' => 'Lainnya / Keterangan Tambahan',
+                        'lainnya' => 'Lainnya / Tulis Lokasi Kustom Baru...',
                     ])
                     ->required()
-                    ->default('gudang'),
+                    ->live()
+                    ->dehydrated(false) // Mencegah field bayangan ini masuk ke database
+                    ->afterStateHydrated(function ($state, $set, $record) {
+                        // Sinkronisasi saat buka halaman EDIT data lama
+                        if ($record) {
+                            $standardLocations = ['gudang', 'ruang_kantor', 'lab_tjkt', 'lab_kkpi', 'lab_fo'];
+                            if (in_array($record->lokasi, $standardLocations)) {
+                                $set('lokasi_select', $record->lokasi);
+                            } else {
+                                $set('lokasi_select', 'lainnya');
+                            }
+                        } else {
+                            $set('lokasi_select', 'gudang'); // Default saat tambah baru
+                        }
+                    })
+                    ->afterStateUpdated(function ($state, $set) {
+                        // Sinkronisasi saat user mengubah pilihan dropdown
+                        if ($state !== 'lainnya') {
+                            $set('lokasi', $state);
+                        } else {
+                            $set('lokasi', ''); // Kosongkan biar user bisa mengetik manual
+                        }
+                    }),
+
+                // 🟢 INPUT TEKS KUSTOM (Ini yang bertugas menyimpan string asli ke database)
+                TextInput::make('lokasi')
+                    ->label('Tulis Nama Ruangan / Lokasi Baru')
+                    ->placeholder('Contoh: Ruang Kepala Sekolah, Lab Multimedia, Aula, dll.')
+                    ->required()
+                    // Hanya menampakkan diri jika opsi dropdown bernilai 'lainnya'
+                    ->visible(fn ($get) => $get('lokasi_select') === 'lainnya')
+                    ->live(),
             ]);
     }
 }

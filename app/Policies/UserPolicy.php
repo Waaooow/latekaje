@@ -23,6 +23,7 @@ class UserPolicy
 
     public function delete(User $user, User $model): bool
     {
-        return $user->isSuperadmin();
+        // Superadmin bisa hapus user lain, TAPI tidak bisa hapus dirinya sendiri
+        return $user->role === 'superadmin' && $user->id !== $model->id;
     }
 }

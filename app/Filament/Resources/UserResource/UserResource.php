@@ -13,6 +13,11 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+// 🟢 KUNCI PERBAIKAN: Menggunakan jalur Actions yang sudah diunifikasi
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
@@ -21,7 +26,6 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'Kelola User';
 
-    // 🟢 REVISI SAKTI: Menggunakan kombinasi type hint string|BackedEnum|null agar disukai PHP 8+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $modelLabel = 'User';
@@ -103,6 +107,16 @@ class UserResource extends Resource
             ])
             ->filters([
                 //
+            ])
+            // 🟢 BERSIH & AMAN: Memanggil langsung tanpa prefiks Tables\
+            ->actions([
+                EditAction::make(),
+                DeleteAction::make(),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

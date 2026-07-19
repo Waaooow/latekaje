@@ -13,12 +13,16 @@ use Filament\Actions\ExportAction;
 use App\Filament\Imports\AssetItemImporter;
 use App\Filament\Exports\AssetItemExporter;
 
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
+use Illuminate\Database\Eloquent\Collection;
+
 class AssetItemsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['activeLoan', 'asset']))
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['activeLoan', 'asset']))
 
             // Tetap pertahankan pengelompokan (grouping) biar terbagi per alat
             ->defaultGroup(
@@ -39,14 +43,14 @@ class AssetItemsTable
 
                 TextColumn::make('nomor_seri_atau_qr')
                     ->label('Nomor Seri / QR')
-                    ->description(fn ($record) => $record->asset?->spesifikasi) 
+                    ->description(fn($record) => $record->asset?->spesifikasi)
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'let tersedia' => 'success',
                         'tersedia' => 'success',
                         'dipinjam' => 'warning',
@@ -57,13 +61,13 @@ class AssetItemsTable
                 TextColumn::make('kondisi')
                     ->label('Kondisi')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'baik' => 'success',
                         'rusak' => 'warning',
                         'rusak_total' => 'danger',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'baik' => 'Baik',
                         'rusak' => 'Rusak',
                         'rusak_total' => 'Rusak Total',
@@ -74,15 +78,15 @@ class AssetItemsTable
                 TextColumn::make('activeLoan.nama_siswa')
                     ->label('Peminjam Aktif')
                     ->default('-')
-                    ->description(fn ($record) => $record->activeLoan?->kelas)
-                    ->color(fn ($record) => $record->status === 'dipinjam' ? 'warning' : 'gray')
+                    ->description(fn($record) => $record->activeLoan?->kelas)
+                    ->color(fn($record) => $record->status === 'dipinjam' ? 'warning' : 'gray')
                     ->searchable(),
 
                 TextColumn::make('lokasi')
                     ->label('Posisi Ruangan')
                     ->badge()
                     ->color('gray')
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'gudang' => '📦 Gudang',
                         'ruang_kantor' => '🏢 Kantor',
                         'lab_tjkt' => '💻 Lab TJKT',
@@ -109,17 +113,46 @@ class AssetItemsTable
                     ->label('Unduh Excel')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success'),
+
+                // 🟢 TAMBAHKAN INI: Tombol Cetak Massal Global di Atas Tabel
+                \Filament\Actions\Action::make('printAllQr')
+                    ->label('Cetak Semua QR')
+                    ->icon('heroicon-o-printer')
+                    ->color('info') // Warna biru biar beda dari yang lain
+                    ->url(route('print.qr', ['ids' => 'all']))
+                    ->openUrlInNewTab(),
             ])
 
             // JALUR ABSOLUT: Mengunci Edit & Delete agar aman dari konflik v5
             ->actions([
                 \Filament\Actions\EditAction::make(),
                 \Filament\Actions\DeleteAction::make(),
+
+                // 🟢 TAMBAHKAN INI: Tombol Cetak QR Satuan di Baris Tabel
+                \Filament\Actions\Action::make('printQr')
+                    ->label('Cetak QR')
+                    ->icon('heroicon-o-printer')
+                    ->color('success')
+                    ->url(fn($record): string => route('print.qr', ['ids' => $record->id]))
+                    ->openUrlInNewTab(),
             ])
 
             // 🟢 FIX FINAL: Memanggil langsung DeleteBulkAction dari rumpun utama Filament\Actions
             ->bulkActions([
                 \Filament\Actions\DeleteBulkAction::make(),
+
+                // 🟢 TAMBAHKAN INI: Fitur Cetak QR Massal lewat Ceklis
+                \Filament\Actions\BulkAction::make('printBulkQr')
+                    ->label('Cetak QR Terpilih')
+                    ->icon('heroicon-o-printer')
+                    ->color('success')
+                    ->action(function (Collection $records) {
+                        // Gabungkan semua ID item yang diceklis menjadi string (misal: "1,3,5")
+                        $ids = $records->pluck('id')->implode(',');
+
+                        // Redirect aman ke tab cetak baru
+                        return redirect()->away(route('print.qr', ['ids' => $ids]));
+                    }),
             ]);
     }
 }

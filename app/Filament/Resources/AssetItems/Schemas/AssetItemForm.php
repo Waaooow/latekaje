@@ -8,56 +8,59 @@ use Filament\Forms\Components\TextInput;
 use App\Models\Asset;
 use App\Models\AssetItem;
 
+// Namespace untuk tombol aksi di dalam inputan form
+use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Set;
+
 class AssetItemForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
+                // 🟢 SEKARANG BERSIH: Validasi rules() dibuang agar input data gak gampang ke-block eror kuota
                 Select::make('asset_id')
                     ->label('Pilih Tipe Alat (Katalog)')
                     ->relationship('asset', 'nama_alat')
                     ->searchable(['kode_aset', 'nama_alat'])
                     ->getOptionLabelFromRecordUsing(fn($record) => "[{$record->kode_aset}] {$record->nama_alat}")
-                    ->required()
-                    ->rules(fn(Select $component): array => [
-                        function (string $attribute, $value, \Closure $fail) use ($component) {
-                            $recordId = null;
-                            $path = request()->getPathInfo(); 
-                            if (preg_match('/\/(\d+)\/edit/', $path, $matches)) {
-                                $recordId = $matches[1];
-                            }
-                            if (!$recordId && isset($component->getLivewire()->record)) {
-                                $recordId = $component->getLivewire()->record->id;
-                            }
-
-                            if ($recordId) {
-                                $originalItem = AssetItem::find($recordId);
-                                if ($originalItem && $originalItem->asset_id == $value) {
-                                    return; 
-                                }
-                            }
-
-                            $asset = Asset::find($value);
-                            if (!$asset) return;
-
-                            $query = AssetItem::where('asset_id', $value);
-                            if ($recordId) {
-                                $query->where('id', '!=', $recordId);
-                            }
-
-                            $jumlahTerdaftar = $query->count();
-
-                            if ($jumlahTerdaftar >= $asset->stok) {
-                                $fail("❌ Gagal Simpan! Jumlah unit fisik untuk '{$asset->nama_alat}' sudah mencapai batas maksimal kuota ({$asset->stok} unit). Silakan naikkan jumlah stok terlebih dahulu di menu 'Total Aset' jika ingin menambah unit baru.");
-                            }
-                        }
-                    ]),
+                    ->required(),
 
                 TextInput::make('nomor_seri_atau_qr')
                     ->label('Nomor Seri / Kode QR')
                     ->required()
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    ->placeholder('Ketik SN pabrik atau klik tombol kanan untuk buat otomatis')
+                    ->suffixAction(
+                        \Filament\Actions\Action::make('generateUniqueCode')
+                            ->icon('heroicon-m-arrow-path')
+                            ->color('success')
+                            ->tooltip('Generate Kode Unik Lab')
+                            ->action(function ($set) {
+                                // 1. Tentukan awalan kode unik (Hasil: LTKJ-2026-)
+                                $prefix = 'LTKJ-' . date('Y') . '-'; 
+                                
+                                // 2. Cari data terakhir di DB yang kodenya mirip dengan awalan tahun ini
+                                $lastItem = AssetItem::where('nomor_seri_atau_qr', 'LIKE', $prefix . '%')
+                                    ->orderBy('nomor_seri_atau_qr', 'desc')
+                                    ->first();
+                                    
+                                if ($lastItem) {
+                                    // Mengambil 5 digit angka terakhir dari string kode terbesar di DB
+                                    $lastNumber = (int) substr($lastItem->nomor_seri_atau_qr, -5);
+                                    $nextNumber = $lastNumber + 1;
+                                } else {
+                                    // Jika tahun ini belum ada kode inventaris sama sekali, mulai dari 1
+                                    $nextNumber = 1;
+                                }
+                                
+                                // 3. Satukan kembali menjadi 5 digit berurut (contoh: LTKJ-2026-00001)
+                                $newCode = $prefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+                                
+                                // 4. Ketikkan otomatis hasilnya ke kolom inputan
+                                $set('nomor_seri_atau_qr', $newCode);
+                            })
+                    ),
 
                 Select::make('status')
                     ->label('Status Ketersediaan')
@@ -79,14 +82,12 @@ class AssetItemForm
                     ->default('baik')
                     ->live()
                     ->afterStateUpdated(function ($state, $set) {
-                        // Jika alat rusak, otomatis arahkan dropdown ke gudang & isi teks lokasi dengan gudang
                         if (in_array($state, ['rusak', 'rusak_total'])) {
                             $set('lokasi_select', 'gudang');
                             $set('lokasi', 'gudang');
                         }
                     }),
 
-                // 🟢 DROPDOWN UTAMA (Hanya untuk kontrol UI, tidak disimpan ke DB)
                 Select::make('lokasi_select')
                     ->label('Lokasi Penempatan')
                     ->options([
@@ -99,9 +100,8 @@ class AssetItemForm
                     ])
                     ->required()
                     ->live()
-                    ->dehydrated(false) // Mencegah field bayangan ini masuk ke database
+                    ->dehydrated(false)
                     ->afterStateHydrated(function ($state, $set, $record) {
-                        // Sinkronisasi saat buka halaman EDIT data lama
                         if ($record) {
                             $standardLocations = ['gudang', 'ruang_kantor', 'lab_tjkt', 'lab_kkpi', 'lab_fo'];
                             if (in_array($record->lokasi, $standardLocations)) {
@@ -110,24 +110,21 @@ class AssetItemForm
                                 $set('lokasi_select', 'lainnya');
                             }
                         } else {
-                            $set('lokasi_select', 'gudang'); // Default saat tambah baru
+                            $set('lokasi_select', 'gudang');
                         }
                     })
                     ->afterStateUpdated(function ($state, $set) {
-                        // Sinkronisasi saat user mengubah pilihan dropdown
                         if ($state !== 'lainnya') {
                             $set('lokasi', $state);
                         } else {
-                            $set('lokasi', ''); // Kosongkan biar user bisa mengetik manual
+                            $set('lokasi', '');
                         }
                     }),
 
-                // 🟢 INPUT TEKS KUSTOM (Ini yang bertugas menyimpan string asli ke database)
                 TextInput::make('lokasi')
                     ->label('Tulis Nama Ruangan / Lokasi Baru')
                     ->placeholder('Contoh: Ruang Kepala Sekolah, Lab Multimedia, Aula, dll.')
                     ->required()
-                    // Hanya menampakkan diri jika opsi dropdown bernilai 'lainnya'
                     ->visible(fn ($get) => $get('lokasi_select') === 'lainnya')
                     ->live(),
             ]);

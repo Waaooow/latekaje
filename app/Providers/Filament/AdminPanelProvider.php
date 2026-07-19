@@ -16,6 +16,8 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\HtmlString;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -58,6 +60,16 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+
+            ->renderHook(
+            PanelsRenderHook::FOOTER,
+            fn () => new HtmlString('
+                <footer class="w-full text-center py-4 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-200 dark:border-gray-800 mt-6">
+                    &copy; ' . date('Y') . ' <span class="font-semibold text-primary-500">LATEKAJE</span>. All Rights Reserved. 
+                    <span class="mx-1">|</span> Crafted with ❤️ by <span class="underline">Alfin & Gemini AI</span>
+                </footer>
+            ')
+        );
     }
 }

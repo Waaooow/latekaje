@@ -159,11 +159,11 @@ class AssetItemsTable
                         Select::make('lokasi_baru')
                             ->label('Pilih Ruangan Tujuan')
                             ->options([
-                                'gudang' => '📦 Gudang',
-                                'ruang_kantor' => '🏢 Kantor',
-                                'lab_tjkt' => '💻 Lab TJKT',
-                                'lab_kkpi' => '🖥️ Lab KKPI',
-                                'lab_fo' => '⚡ Lab FO',
+                                'gudang' => 'Gudang',
+                                'ruang_kantor' => 'Kantor',
+                                'lab_tjkt' => 'Lab TJKT',
+                                'lab_kkpi' => 'Lab KKPI',
+                                'lab_fo' => 'Lab FO',
                             ])
                             ->required(),
                     ])

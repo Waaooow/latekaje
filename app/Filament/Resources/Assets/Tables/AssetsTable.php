@@ -6,20 +6,24 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 
+// 🟢 FIX IMPORT: Menggunakan import resmi unifikasi Filament baru, bersih dari backslash inline
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+
 class AssetsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(
-                // Menggunakan hitungan total & kondisi secara realtime (Anti-kepentok)
-                \App\Models\Asset::query()->withCount([
-                    'assetItems', 
-                    'assetItems as unit_baik' => fn ($query) => $query->where('kondisi', 'baik'),
-                    'assetItems as unit_rusak' => fn ($query) => $query->where('kondisi', 'rusak'),
-                    'assetItems as unit_rusak_total' => fn ($query) => $query->where('kondisi', 'rusak_total'),
-                ])
-            )
+            // 🟢 FIX 1: Menggunakan modifyQueryUsing agar tidak merusak fitur search & filter bawaan Filament Resource
+            ->modifyQueryUsing(fn (Builder $query) => $query->withCount([
+                'assetItems', 
+                'assetItems as unit_baik' => fn ($query) => $query->where('kondisi', 'baik'),
+                'assetItems as unit_rusak' => fn ($query) => $query->where('kondisi', 'rusak'),
+                'assetItems as unit_rusak_total' => fn ($query) => $query->where('kondisi', 'rusak_total'),
+            ]))
+            
             ->columns([
                 TextColumn::make('kode_aset')
                     ->label('Kode Aset')
@@ -41,11 +45,17 @@ class AssetsTable
                     ->limit(30)
                     ->searchable(),
 
+                // 🟢 FIX 2: Dibuat menjadi badge dan ditambahkan mapping emoji agar sinkron dengan Form Baru
                 TextColumn::make('kegunaan')
                     ->label('Kegunaan')
+                    ->badge()
+                    ->color('gray')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'praktik' => '🛠️ Praktik',
-                        'non_praktik' => '📋 Non-Praktik',
+                        'non_praktik' => '💼 Non-Praktik',
+                        'Praktik Siswa' => '👨‍🎓 Praktik Siswa',
+                        'Praktik Guru' => '👨‍🏫 Praktik Guru',
+                        'Ujian/CBT' => '📝 Ujian / CBT',
                         default => $state,
                     }),
 
@@ -66,7 +76,6 @@ class AssetsTable
                         ";
                     }),
 
-                // Menampilkan 'asset_items_count' hasil kalkulasi dinamis database
                 TextColumn::make('asset_items_count')
                     ->label('Jumlah Total')
                     ->badge()
@@ -75,15 +84,14 @@ class AssetsTable
                     ->sortable(),
             ])
             
-            // JALUR ABSOLUT: Mengunci Edit & Delete untuk tabel induk katalog
+            // 🟢 FIX 3: Rapi dan aman dari eror compiler
             ->actions([
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
 
-            // 🟢 FIX FINAL: Memanggil langsung DeleteBulkAction dari rumpun utama Filament\Actions
             ->bulkActions([
-                \Filament\Actions\DeleteBulkAction::make(),
+                DeleteBulkAction::make(),
             ]);
     }
 }

@@ -46,10 +46,10 @@ class UserResource extends Resource
                 Select::make('role')
                     ->label('Hak Akses (Role)')
                     ->options([
-                        'superadmin' => '👑 Superadmin',
-                        'toolman'    => '🔧 Toolman (Kepala Lab)',
-                        'anak_pkl'   => '👶 Anak PKL (Asisten)',
-                        'siswa'      => '🎓 Siswa (Peminjam)',
+                        'superadmin' => 'Superadmin',
+                        'toolman'    => 'Toolman (Kepala Lab)',
+                        'anak_pkl'   => 'Anak PKL (Asisten)',
+                        'siswa'      => 'Siswa (Peminjam)',
                     ])
                     ->required()
                     ->default('siswa'),

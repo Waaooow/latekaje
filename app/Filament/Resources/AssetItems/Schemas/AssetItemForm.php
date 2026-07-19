@@ -18,18 +18,32 @@ class AssetItemForm
                     ->label('Pilih Tipe Alat (Katalog)')
                     ->relationship('asset', 'nama_alat')
                     ->searchable(['kode_aset', 'nama_alat'])
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "[{$record->kode_aset}] {$record->nama_alat}")
+                    ->getOptionLabelFromRecordUsing(fn($record) => "[{$record->kode_aset}] {$record->nama_alat}")
                     ->required()
-                    ->rules(fn (Select $component): array => [
+                    ->rules(fn(Select $component): array => [
                         function (string $attribute, $value, \Closure $fail) use ($component) {
+                            $recordId = null;
+                            $path = request()->getPathInfo(); 
+                            if (preg_match('/\/(\d+)\/edit/', $path, $matches)) {
+                                $recordId = $matches[1];
+                            }
+                            if (!$recordId && isset($component->getLivewire()->record)) {
+                                $recordId = $component->getLivewire()->record->id;
+                            }
+
+                            if ($recordId) {
+                                $originalItem = AssetItem::find($recordId);
+                                if ($originalItem && $originalItem->asset_id == $value) {
+                                    return; 
+                                }
+                            }
+
                             $asset = Asset::find($value);
                             if (!$asset) return;
 
                             $query = AssetItem::where('asset_id', $value);
-
-                            $currentRecord = $component->getRecord();
-                            if ($currentRecord && $currentRecord->exists) {
-                                $query->where('id', '!=', $currentRecord->id);
+                            if ($recordId) {
+                                $query->where('id', '!=', $recordId);
                             }
 
                             $jumlahTerdaftar = $query->count();
@@ -45,7 +59,7 @@ class AssetItemForm
                     ->required()
                     ->unique(ignoreRecord: true),
 
-                // Murni untuk Ketersediaan Pinjaman
+                // 🟢 SUDAH DI-FIX: Baris 'folders' yang nyasar sudah dibuang!
                 Select::make('status')
                     ->label('Status Ketersediaan')
                     ->options([
@@ -55,7 +69,6 @@ class AssetItemForm
                     ->required()
                     ->default('tersedia'),
 
-                // 🟢 BARU: Murni untuk Kondisi Fisik Alat
                 Select::make('kondisi')
                     ->label('Kondisi Fisik Alat')
                     ->options([
@@ -67,7 +80,6 @@ class AssetItemForm
                     ->default('baik')
                     ->live()
                     ->afterStateUpdated(function ($state, $set) {
-                        // Jika terdeteksi rusak/rusak total, otomatis arahkan lokasinya ke gudang
                         if (in_array($state, ['rusak', 'rusak_total'])) {
                             $set('lokasi', 'gudang');
                         }

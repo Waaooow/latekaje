@@ -26,6 +26,12 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            
+            // 🟢 TIGA BARIS SAKTI: Pasang Logo Baru & Favicon Bebas Versi
+            ->brandLogo(asset('images/logo.png'))
+            ->brandLogoHeight('2.8rem')
+            ->favicon(asset('images/favicon.png'))
+            
             ->colors([
                 'primary' => Color::Amber,
             ])

@@ -20,6 +20,20 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory, Notifiable;
 
     /**
+     * 🌟 AUTO ROLE SUPERADMIN:
+     * Mencegat proses registrasi. Jika database masih kosong (0 user),
+     * user pertama yang mendaftar langsung dinobatkan sebagai 'superadmin'.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function ($user) {
+            if (static::count() === 0) {
+                $user->role = 'superadmin';
+            }
+        });
+    }
+
+    /**
      * 🟢 FILAMENT PANEL ACCESS:
      * Menentukan siapa saja yang punya izin untuk login ke dashboard Filament.
      */

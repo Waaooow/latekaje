@@ -1,25 +1,28 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Models\AssetItem;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/admin');
 
-Route::get('/print-qr', function (Request $request) {
-    $idsParam = $request->query('ids');
-    
-    if ($idsParam === 'all' || !$idsParam) {
-        $items = AssetItem::with('asset')->get();
-    } else {
-        // 🟢 FIX: Ganti 'with' menjadi 'asset' biar relasi katalognya ketarik sempurna
-        $ids = explode(',', $idsParam);
-        $items = AssetItem::with('asset')->whereIn('id', $ids)->get();
-    }
-    
-    if ($items->isEmpty()) {
-        return "Gagal cetak: Tidak ada item yang ditemukan.";
+Route::get('/print-qr', function () {
+    $ids = request()->query('ids', 'all');
+
+    $query = AssetItem::query()->with('asset')->orderBy('nomor_seri_atau_qr');
+
+    if ($ids !== 'all') {
+        $idList = collect(explode(',', (string) $ids))
+            ->map(fn ($v) => trim($v))
+            ->filter()
+            ->values()
+            ->all();
+
+        $query->whereIn('id', $idList);
     }
 
-    return view('print-qrcode', compact('items'));
-})->name('print.qr')->middleware(['auth']);
+    return view('print-qrcode', [
+        'items' => $query->get(),
+    ]);
+})->middleware('auth')->name('print.qr');
+
+Route::get("/login", fn () => redirect("/admin/login"))->name("login");

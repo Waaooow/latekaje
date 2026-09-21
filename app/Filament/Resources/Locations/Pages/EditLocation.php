@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\UserResource\Pages;
+namespace App\Filament\Resources\Locations\Pages;
 
-use App\Filament\Resources\UserResource\UserResource;
+use App\Filament\Resources\Locations\LocationResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditUser extends EditRecord
+class EditLocation extends EditRecord
 {
-    protected static string $resource = UserResource::class;
+    protected static string $resource = LocationResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -19,6 +19,6 @@ class EditUser extends EditRecord
 
     protected function getRedirectUrl(): string
     {
-        return static::getResource()::getUrl('index');
+        return $this->getResource()::getUrl('index');
     }
 }

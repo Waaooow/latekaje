@@ -2,27 +2,82 @@
 
 namespace Database\Seeders;
 
+use App\Models\Asset;
+use App\Models\AssetItem;
+use App\Models\Location;
 use App\Models\User;
+use App\Services\LoanService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // 👑 OTOMATISASI SUPERADMIN SAAT DEPLOY
+        $gudang = Location::firstOrCreate(
+            ['key' => 'gudang'],
+            ['label' => 'Gudang (Penyimpanan)']
+        );
+
+        Location::firstOrCreate(
+            ['key' => 'ruang_kantor'],
+            ['label' => 'Ruang Kantor']
+        );
+
+        $labTjkt = Location::firstOrCreate(
+            ['key' => 'lab_tjkt'],
+            ['label' => 'Lab TJKT']
+        );
+
+        Location::firstOrCreate(
+            ['key' => 'lab_kkpi'],
+            ['label' => 'Lab KKPI']
+        );
+
+        Location::firstOrCreate(
+            ['key' => 'lab_fo'],
+            ['label' => 'Lab FO']
+        );
+
         User::firstOrCreate(
-            // Kunci unik untuk pengecekan data (Email)
-            ['email' => env('SUPERADMIN_EMAIL', 'superadmin@gmail.com')],
-            // Data yang akan diinput jika email di atas belum terdaftar
+            ['email' => 'admin@gmail.com'],
             [
-                'name' => env('SUPERADMIN_NAME', 'Super Admin LATEKAJE'),
-                'password' => Hash::make(env('SUPERADMIN_PASSWORD', 'password123')), // Ubah sesuai keinginan
+                'name' => 'admin',
+                'password' => Hash::make('@Alfin488704'),
                 'role' => 'superadmin',
             ]
         );
+
+        $asset = Asset::firstOrCreate(
+            ['kode_aset' => 'TJKT-NET-001'],
+            [
+                'nama_alat' => 'Router Mikrotik',
+                'jenis' => 'Networking',
+                'spesifikasi' => 'RB450G',
+                'kegunaan' => 'praktik',
+                'stok' => 3,
+            ]
+        );
+
+        $serials = ['LTKJ-2026-00001', 'LTKJ-2026-00002', 'LTKJ-2026-00003'];
+
+        $items = [];
+        foreach ($serials as $serial) {
+            $items[] = AssetItem::firstOrCreate(
+                ['nomor_seri_atau_qr' => $serial],
+                [
+                    'asset_id' => $asset->id,
+                    'status' => 'tersedia',
+                    'kondisi' => 'baik',
+                    'location_id' => $labTjkt->id,
+                ]
+            );
+        }
+
+        try {
+            LoanService::borrow($items[0]->id, 'Budi Santoso', 'X TJKT 1');
+        } catch (\Throwable $e) {
+            // Skip demo loan if it already exists or item is unavailable.
+        }
     }
 }

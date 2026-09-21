@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Loans\Pages;
 
 use App\Filament\Resources\Loans\LoanResource;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Actions\CreateAction; // 🟢 IMPORT: Core Action bawaan Filament v5
 
 class ListLoans extends ListRecords
 {

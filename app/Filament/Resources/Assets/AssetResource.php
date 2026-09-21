@@ -18,11 +18,9 @@ class AssetResource extends Resource
 {
     protected static ?string $model = Asset::class;
 
-    protected static ?string $navigationLabel = 'Aset';
-
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'latekaje';
+    protected static ?string $navigationLabel = 'Aset';
 
     public static function form(Schema $schema): Schema
     {
@@ -32,13 +30,6 @@ class AssetResource extends Resource
     public static function table(Table $table): Table
     {
         return AssetsTable::configure($table);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array

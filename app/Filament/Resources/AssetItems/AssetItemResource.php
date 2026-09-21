@@ -18,14 +18,11 @@ class AssetItemResource extends Resource
 {
     protected static ?string $model = AssetItem::class;
 
-    protected static ?string $navigationLabel = 'Data Unit/QR';
-
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQrCode;
 
-    protected static ?string $modelLabel = 'Data Items';
-    protected static ?string $pluralModelLabel = 'Data Items';
+    protected static ?string $navigationLabel = 'Data Unit/QR';
 
-    protected static ?string $recordTitleAttribute = 'Unit';
+    protected static ?string $modelLabel = 'Data Items';
 
     public static function form(Schema $schema): Schema
     {
@@ -35,13 +32,6 @@ class AssetItemResource extends Resource
     public static function table(Table $table): Table
     {
         return AssetItemsTable::configure($table);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array

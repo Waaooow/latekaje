@@ -4,6 +4,7 @@ namespace App\Filament\Imports;
 
 use App\Models\Asset;
 use App\Models\AssetItem;
+use App\Models\Location;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
@@ -15,77 +16,111 @@ class AssetItemImporter extends Importer
     public static function getColumns(): array
     {
         return [
-            // 🟢 FIX 100%: Menggunakan fillRecordUsing(fn () => null) agar Filament tidak menyentuh model anak
             ImportColumn::make('nama_alat')
                 ->requiredMapping()
-                ->fillRecordUsing(fn () => null),
-                
-            ImportColumn::make('kode_aset')
-                ->fillRecordUsing(fn () => null),
-                
-            ImportColumn::make('jenis')
-                ->fillRecordUsing(fn () => null),
-                
-            ImportColumn::make('spesifikasi')
-                ->fillRecordUsing(fn () => null),
-                
-            ImportColumn::make('kegunaan')
+                ->rules(['required', 'string', 'max:255'])
                 ->fillRecordUsing(fn () => null),
 
-            // Kolom asli milik tabel asset_items (Bypass juga agar tidak menimpa logic fallback kita)
+            ImportColumn::make('kode_aset')
+                ->rules(['nullable', 'string', 'max:255'])
+                ->fillRecordUsing(fn () => null),
+
+            ImportColumn::make('jenis')
+                ->rules(['nullable', 'string', 'max:255'])
+                ->fillRecordUsing(fn () => null),
+
+            ImportColumn::make('spesifikasi')
+                ->rules(['nullable', 'string', 'max:255'])
+                ->fillRecordUsing(fn () => null),
+
+            ImportColumn::make('kegunaan')
+                ->rules(['nullable', 'string', 'max:255'])
+                ->fillRecordUsing(fn () => null),
+
             ImportColumn::make('nomor_seri_atau_qr')
                 ->requiredMapping()
+                ->rules(['required', 'string', 'max:255'])
                 ->fillRecordUsing(fn () => null),
-                
+
             ImportColumn::make('kondisi')
+                ->rules(['nullable', 'string', 'max:255'])
                 ->fillRecordUsing(fn () => null),
-                
+
             ImportColumn::make('lokasi')
+                ->rules(['nullable', 'string', 'max:255'])
                 ->fillRecordUsing(fn () => null),
-                
+
             ImportColumn::make('status')
+                ->rules(['nullable', 'string', 'max:255'])
                 ->fillRecordUsing(fn () => null),
         ];
     }
 
     public function resolveRecord(): ?AssetItem
     {
-        // 1. Ambil atau buat data Katalog Aset (Induk)
+        $namaAlat = trim((string) ($this->data['nama_alat'] ?? ''));
+
+        if ($namaAlat === '') {
+            return null;
+        }
+
         $asset = Asset::firstOrCreate(
-            ['nama_alat' => $this->data['nama_alat']],
+            ['nama_alat' => $namaAlat],
             [
-                'kode_aset' => ($this->data['kode_aset'] ?? '') ?: 'AST-' . strtoupper(uniqid()),
-                'jenis' => ($this->data['jenis'] ?? '') ?: 'perangkat',
-                'spesifikasi' => ($this->data['spesifikasi'] ?? '') ?: '-',
-                'kegunaan' => ($this->data['kegunaan'] ?? '') ?: 'praktik',
+                'kode_aset' => trim((string) ($this->data['kode_aset'] ?? '')) ?: ('IMP-' . strtoupper(substr(md5($namaAlat), 0, 8))),
+                'jenis' => trim((string) ($this->data['jenis'] ?? '')) ?: 'Umum',
+                'spesifikasi' => trim((string) ($this->data['spesifikasi'] ?? '')) ?: '-',
+                'kegunaan' => trim((string) ($this->data['kegunaan'] ?? '')) ?: 'praktik',
+                'stok' => 1,
             ]
         );
 
-        // 2. Cari apakah nomor seri ini sudah pernah ada untuk menghindari duplikat
-        $assetItem = AssetItem::firstOrNew([
-            'nomor_seri_atau_qr' => $this->data['nomor_seri_atau_qr'],
+        $rawKey = trim((string) ($this->data['lokasi'] ?? ''));
+        $key = $rawKey !== '' ? $rawKey : 'gudang';
+
+        $location = Location::firstOrCreate(
+            ['key' => $key],
+            ['label' => ucwords(str_replace(['_', '-'], ' ', $key))]
+        );
+
+        $serial = trim((string) ($this->data['nomor_seri_atau_qr'] ?? ''));
+
+        if ($serial === '') {
+            return null;
+        }
+
+        $kondisi = strtolower(trim((string) ($this->data['kondisi'] ?? 'baik')));
+        if (! in_array($kondisi, ['baik', 'rusak', 'rusak_total'], true)) {
+            $kondisi = 'baik';
+        }
+
+        $status = strtolower(trim((string) ($this->data['status'] ?? 'tersedia')));
+        if (! in_array($status, ['tersedia', 'dipinjam'], true)) {
+            $status = 'tersedia';
+        }
+
+        $item = AssetItem::firstOrNew([
+            'nomor_seri_atau_qr' => $serial,
         ]);
 
-        // 3. Amankan pengisian data unit fisik dengan fallback nilai default secara absolut
-        $assetItem->fill([
-            'asset_id' => $asset->id,
-            'nomor_seri_atau_qr' => $this->data['nomor_seri_atau_qr'],
-            'kondisi' => ($this->data['kondisi'] ?? '') ?: 'baik',
-            'lokasi' => ($this->data['lokasi'] ?? '') ?: 'gudang',
-            'status' => ($this->data['status'] ?? '') ?: 'tersedia',
+        $item->fill([
+            'asset_id' => $asset->getKey(),
+            'kondisi' => $kondisi,
+            'location_id' => $location->getKey(),
+            'status' => $status,
         ]);
 
-        return $assetItem;
+        return $item;
     }
 
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Proses import data unit telah selesai dan ' . number_format($import->successful_rows) . ' baris berhasil dimasukkan.';
+        $body = 'Impor data unit selesai: ' . number_format($import->successful_rows) . ' baris berhasil';
 
-        if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' baris gagal di-import.';
+        if ($failed = $import->getFailedRowsCount()) {
+            $body .= ', ' . number_format($failed) . ' baris gagal';
         }
 
-        return $body;
+        return $body . '.';
     }
 }

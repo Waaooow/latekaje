@@ -13,7 +13,7 @@ class InventoryConditionChart extends ChartWidget
 
     protected function getType(): string
     {
-        return 'pie';
+        return 'doughnut';
     }
 
     protected function getData(): array

@@ -78,6 +78,35 @@ class AssetItemsTable
             ->headerActions([
                 ImportAction::make()
                     ->importer(AssetItemImporter::class),
+                Action::make('downloadTemplateCsv')
+                    ->label('Template CSV')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->action(function () {
+                        $headers = [
+                            'nama_alat', 'kode_aset', 'jenis', 'spesifikasi', 'kegunaan',
+                            'nomor_seri_atau_qr', 'kondisi', 'lokasi', 'status', 'jumlah',
+                        ];
+
+                        $rows = [
+                            // Satuan dengan SN manual.
+                            ['Mini PC', 'PC-MINI-001', 'Komputer', 'Intel N100, RAM 8GB', 'praktik', 'SN-PC-001', 'baik', 'lab_tjkt', 'tersedia', ''],
+                            // Massal: jumlah tanpa SN → kode digenerate otomatis.
+                            ['Kabel HDMI', 'KBL-HDMI-001', 'Aksesoris', '2 meter', 'praktik', '', 'baik', 'gudang', 'tersedia', '10'],
+                        ];
+
+                        return response()->streamDownload(function () use ($headers, $rows) {
+                            $out = fopen('php://output', 'w');
+                            fwrite($out, "\xEF\xBB\xBF");
+                            fputcsv($out, $headers);
+
+                            foreach ($rows as $row) {
+                                fputcsv($out, $row);
+                            }
+
+                            fclose($out);
+                        }, 'template-import-unit.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+                    }),
                 ExportAction::make()
                     ->exporter(AssetItemExporter::class),
                 Action::make('printAllQr')

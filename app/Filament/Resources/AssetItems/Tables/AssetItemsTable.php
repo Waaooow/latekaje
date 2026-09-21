@@ -96,12 +96,13 @@ class AssetItemsTable
                         ];
 
                         return response()->streamDownload(function () use ($headers, $rows) {
+                            // Titik-koma agar langsung terparsing di Excel Indonesia.
                             $out = fopen('php://output', 'w');
                             fwrite($out, "\xEF\xBB\xBF");
-                            fputcsv($out, $headers);
+                            fputcsv($out, $headers, ';');
 
                             foreach ($rows as $row) {
-                                fputcsv($out, $row);
+                                fputcsv($out, $row, ';');
                             }
 
                             fclose($out);

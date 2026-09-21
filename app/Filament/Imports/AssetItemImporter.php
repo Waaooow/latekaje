@@ -20,6 +20,7 @@ class AssetItemImporter extends Importer
             ImportColumn::make('nama_alat')
                 ->requiredMapping()
                 ->rules(['required', 'string', 'max:255'])
+                ->examples(['Mini PC', 'Kabel HDMI'])
                 ->fillRecordUsing(fn () => null),
 
             ImportColumn::make('kode_aset')
@@ -40,10 +41,12 @@ class AssetItemImporter extends Importer
 
             ImportColumn::make('nomor_seri_atau_qr')
                 ->rules(['nullable', 'string', 'max:255'])
+                ->examples(['SN-PC-001', ''])
                 ->fillRecordUsing(fn () => null),
 
             ImportColumn::make('jumlah')
                 ->rules(['nullable', 'integer', 'min:1', 'max:1000'])
+                ->examples(['', '10'])
                 ->fillRecordUsing(fn () => null),
 
             ImportColumn::make('kondisi')
@@ -52,6 +55,7 @@ class AssetItemImporter extends Importer
 
             ImportColumn::make('lokasi')
                 ->rules(['nullable', 'string', 'max:255'])
+                ->examples(['lab_tjkt', 'ALMARI 2'])
                 ->fillRecordUsing(fn () => null),
 
             ImportColumn::make('status')

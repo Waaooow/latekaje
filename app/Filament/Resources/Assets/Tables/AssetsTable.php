@@ -2,10 +2,17 @@
 
 namespace App\Filament\Resources\Assets\Tables;
 
+use App\Models\Location;
+use App\Services\AssetItemService;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -70,6 +77,66 @@ class AssetsTable
                     ->sortable(),
             ])
             ->actions([
+                Action::make('tambahUnit')
+                    ->label('Tambah Unit')
+                    ->icon('heroicon-o-plus-circle')
+                    ->color('info')
+                    ->modalHeading(fn ($record) => 'Tambah Unit: '.$record->nama_alat)
+                    ->form([
+                        TextInput::make('jumlah')
+                            ->label('Jumlah Unit')
+                            ->numeric()
+                            ->default(1)
+                            ->minValue(1)
+                            ->maxValue(500)
+                            ->required(),
+
+                        Select::make('location_id')
+                            ->label('Lokasi Penempatan')
+                            ->options(fn () => Location::orderBy('label')->pluck('label', 'id'))
+                            ->default(fn () => Location::where('key', 'gudang')->value('id'))
+                            ->required(),
+
+                        Select::make('kondisi')
+                            ->label('Kondisi Awal')
+                            ->options([
+                                'baik' => 'Baik',
+                                'rusak' => 'Rusak',
+                                'rusak_total' => 'Rusak Total',
+                            ])
+                            ->default('baik')
+                            ->required(),
+
+                        Textarea::make('sn_manual')
+                            ->label('SN Manual (opsional)')
+                            ->rows(3)
+                            ->placeholder("Satu SN per baris. Sisanya digenerate otomatis.")
+                            ->helperText('Kosongkan bila unit tidak punya SN.'),
+                    ])
+                    ->action(function ($record, array $data): void {
+                        $serials = collect(preg_split('/\r\n|\r|\n/', (string) ($data['sn_manual'] ?? '')))
+                            ->map(fn ($s) => trim((string) $s))
+                            ->filter()
+                            ->values()
+                            ->all();
+
+                        $qty = max((int) $data['jumlah'], count($serials), 1);
+
+                        $units = AssetItemService::bulkCreate(
+                            $record,
+                            $qty,
+                            (int) $data['location_id'],
+                            (string) $data['kondisi'],
+                            'tersedia',
+                            $serials,
+                        );
+
+                        Notification::make()
+                            ->title($units->count().' unit ditambahkan ke '.$record->nama_alat)
+                            ->body('Kode: '.$units->first()->nomor_seri_atau_qr.' s/d '.$units->last()->nomor_seri_atau_qr)
+                            ->success()
+                            ->send();
+                    }),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

@@ -72,13 +72,6 @@ class AssetForm
                 ->visible(fn (Get $get): bool => $get('kegunaan') === 'lainnya')
                 ->dehydrated(false)
                 ->live(),
-
-            TextInput::make('stok')
-                ->label('Kuota Maksimal Unit')
-                ->numeric()
-                ->default(1)
-                ->minValue(1)
-                ->required(),
         ]);
     }
 }

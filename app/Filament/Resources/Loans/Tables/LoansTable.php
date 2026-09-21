@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Loans\Tables;
 
 use App\Services\LoanService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -26,23 +27,26 @@ class LoansTable
                     ->sortable(),
 
                 TextColumn::make('nama_siswa')
-                    ->label('Nama Siswa')
+                    ->label('Peminjam')
+                    ->description(fn ($record) => $record->kelas)
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('kelas')
-                    ->label('Kelas')
-                    ->searchable()
-                    ->sortable(),
+                TextColumn::make('return_pin')
+                    ->label('PIN')
+                    ->badge()
+                    ->color('info')
+                    ->copyable()
+                    ->visible(fn () => ! auth()->user()?->isSiswa()),
 
                 TextColumn::make('tanggal_pinjam')
                     ->label('Tgl Pinjam')
-                    ->date()
+                    ->dateTime('d M Y H:i')
                     ->sortable(),
 
                 TextColumn::make('tanggal_kembali')
                     ->label('Tgl Kembali')
-                    ->date()
+                    ->dateTime('d M Y H:i')
                     ->placeholder('-')
                     ->sortable(),
 
@@ -51,6 +55,19 @@ class LoansTable
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'aktif' ? 'Dipinjam' : 'Kembali')
                     ->color(fn (string $state): string => $state === 'aktif' ? 'warning' : 'success'),
+
+                TextColumn::make('returned_by')
+                    ->label('Dikembalikan Oleh')
+                    ->description(fn ($record) => trim(($record->return_relation === 'wakil' ? 'Di Wakilkan' : 'Sendiri').($record->received_by ? ' · Diterima: '.$record->received_by : '')))
+                    ->placeholder('-')
+                    ->toggleable(),
+
+                TextColumn::make('return_method')
+                    ->label('Metode')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state === 'petugas' ? 'Petugas' : ($state ? 'Mandiri' : '-'))
+                    ->color(fn (?string $state): string => $state === 'petugas' ? 'info' : 'gray')
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -77,7 +94,7 @@ class LoansTable
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn ($record): bool => $record->status === 'aktif')
-                    ->modalHeading('Kembalikan Alat (Scan QR)')
+                    ->modalHeading('Kembalikan Alat')
                     ->modalDescription(new HtmlString('
                         <div x-data="latekajeScanner(\'reader-table-return\', \'qr-table-return-field\')" x-init="init()" class="mb-3">
                             <div id="reader-table-return" style="min-height:240px" class="w-full overflow-hidden rounded-lg border border-dashed border-gray-300 bg-black"></div>
@@ -90,7 +107,6 @@ class LoansTable
                                 <button type="button" @click="restart()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Scan Ulang</button>
                                 <button type="button" @click="stop()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Matikan Kamera</button>
                             </div>
-                            <p class="mt-2 text-xs text-gray-400">Hasil scan otomatis mengisi kolom Kode QR di bawah. Bisa juga diketik manual.</p>
                         </div>
                     '))
                     ->schema([
@@ -99,31 +115,47 @@ class LoansTable
                             ->required()
                             ->extraAttributes(['id' => 'qr-table-return-field']),
 
-                        TextInput::make('nama_siswa_input')
-                            ->label('Nama Penerima (Toolman)')
+                        TextInput::make('pin')
+                            ->label('PIN Pengembalian (6 digit)')
+                            ->required()
+                            ->length(6)
+                            ->placeholder('Diberikan saat meminjam'),
+
+                        TextInput::make('returned_by')
+                            ->label('Nama Pengembali (yang bawa alat)')
+                            ->required()
+                            ->placeholder('cth: Budi Santoso'),
+
+                        Select::make('return_relation')
+                            ->label('Status Pengembali')
+                            ->options([
+                                'sendiri' => 'Peminjam sendiri',
+                                'wakil' => 'Di Wakilkan teman',
+                            ])
+                            ->default('sendiri')
                             ->required(),
 
-                        Select::make('kelas_input')
-                            ->label('Kelas Penerima')
-                            ->required()
-                            ->options([
-                                'X TJKT 1' => 'X TJKT 1',
-                                'X TJKT 2' => 'X TJKT 2',
-                                'XI TJKT 1' => 'XI TJKT 1',
-                                'XI TJKT 2' => 'XI TJKT 2',
-                                'XII TJKT 1' => 'XII TJKT 1',
-                                'XII TJKT 2' => 'XII TJKT 2',
-                                'GURU / STAF' => 'GURU / STAF',
-                            ]),
+                        TextInput::make('received_by')
+                            ->label('Diterima Oleh Petugas (opsional)')
+                            ->placeholder('Kosongkan bila mandiri / tanpa petugas'),
+
+                        FileUpload::make('return_photo_path')
+                            ->label('Foto Bukti (opsional)')
+                            ->image()
+                            ->disk('public')
+                            ->directory('returns')
+                            ->maxSize(2048),
                     ])
                     ->action(function ($record, array $data): void {
                         try {
-                            LoanService::returnLoan(
-                                $record,
-                                (string) $data['nomor_seri_atau_qr'],
-                                (string) $data['nama_siswa_input'],
-                                (string) $data['kelas_input'],
-                            );
+                            LoanService::returnLoan($record, [
+                                'qr' => (string) ($data['nomor_seri_atau_qr'] ?? ''),
+                                'pin' => (string) ($data['pin'] ?? ''),
+                                'returned_by' => (string) ($data['returned_by'] ?? ''),
+                                'return_relation' => (string) ($data['return_relation'] ?? 'sendiri'),
+                                'received_by' => (string) ($data['received_by'] ?? ''),
+                                'return_photo_path' => $data['return_photo_path'] ?? null,
+                            ]);
                         } catch (ValidationException $e) {
                             Notification::make()
                                 ->title('Gagal mengembalikan')

@@ -3,9 +3,10 @@
 namespace App\Filament\Resources\Loans\Schemas;
 
 use App\Models\AssetItem;
+use App\Models\SchoolClass;
 use Closure;
-use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Set;
@@ -19,6 +20,23 @@ class LoanForm
         return $schema->components([
             Hidden::make('asset_item_id')
                 ->required(),
+
+            Placeholder::make('qr_scanner')
+                ->hiddenLabel()
+                ->content(new HtmlString('
+                    <div x-data="latekajeScanner(\'reader-loan-inline\', \'loan-qr-field\')" x-init="init()">
+                        <div id="reader-loan-inline" style="min-height:240px" class="w-full overflow-hidden rounded-lg border border-dashed border-gray-300 bg-black"></div>
+                        <p class="mt-2 text-sm text-gray-500" x-text="status"></p>
+                        <p class="mt-1 text-sm text-red-600" x-show="error" x-text="error"></p>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <select x-show="cameras.length > 1" x-model="cameraId" @change="restart()" class="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
+                                <template x-for="c in cameras" :key="c.id"><option :value="c.id" x-text="c.label || c.id"></option></template>
+                            </select>
+                            <button type="button" @click="restart()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Scan Ulang</button>
+                            <button type="button" @click="stop()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Matikan Kamera</button>
+                        </div>
+                    </div>
+                ')),
 
             TextInput::make('nomor_seri_atau_qr')
                 ->label('Scan / Ketik Kode QR Alat')
@@ -71,48 +89,27 @@ class LoanForm
                         $set('nomor_seri_atau_qr', $record->assetItem->nomor_seri_atau_qr);
                     }
                 })
-                ->suffixAction(
-                    Action::make('scanWebcamQr')
-                        ->label('Scan QR')
-                        ->icon('heroicon-o-camera')
-                        ->modalHeading('Scan QR via Webcam')
-                        ->modalWidth('md')
-                        ->modalSubmitAction(false)
-                        ->modalContent(new HtmlString('
-                            <div x-data="latekajeScanner(\'reader-loan-scanner\', \'loan-qr-field\')" x-init="init()">
-                                <div id="reader-loan-scanner" style="min-height:260px" class="w-full overflow-hidden rounded-lg border border-dashed border-gray-300 bg-black"></div>
-                                <p class="mt-2 text-sm text-gray-500" x-text="status"></p>
-                                <p class="mt-1 text-sm text-red-600" x-show="error" x-text="error"></p>
-                                <div class="mt-2 flex flex-wrap items-center gap-2">
-                                    <select x-show="cameras.length > 1" x-model="cameraId" @change="restart()" class="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
-                                        <template x-for="c in cameras" :key="c.id"><option :value="c.id" x-text="c.label || c.id"></option></template>
-                                    </select>
-                                    <button type="button" @click="restart()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Scan Ulang</button>
-                                    <button type="button" @click="stop()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Matikan Kamera</button>
-                                </div>
-                            </div>
-                        '))
-                )
                 ->extraAttributes(['id' => 'loan-qr-field']),
 
+            TextInput::make('return_pin')
+                ->label('PIN Pengembalian (6 digit)')
+                ->required()
+                ->length(6)
+                ->rule('regex:/^[0-9]{6}$/')
+                ->default(fn (): string => sprintf('%06d', random_int(0, 999999)))
+                ->helperText('Sudah terisi otomatis — boleh diganti. WAJIB diingat: tanpa PIN ini alat tidak bisa dikembalikan.'),
+
             TextInput::make('nama_siswa')
-                ->label('Nama Siswa')
+                ->label('Nama Peminjam')
                 ->required()
                 ->maxLength(255),
 
             Select::make('kelas')
-                ->label('Kelas')
+                ->label('Kelas / Asal Peminjam')
                 ->required()
                 ->searchable()
-                ->options([
-                    'X TJKT 1' => 'X TJKT 1',
-                    'X TJKT 2' => 'X TJKT 2',
-                    'XI TJKT 1' => 'XI TJKT 1',
-                    'XI TJKT 2' => 'XI TJKT 2',
-                    'XII TJKT 1' => 'XII TJKT 1',
-                    'XII TJKT 2' => 'XII TJKT 2',
-                    'GURU / STAF' => 'GURU / STAF',
-                ]),
+                ->options(fn () => SchoolClass::orderBy('label')->pluck('label', 'label'))
+                ->helperText('Kelola daftar via menu Kelas.'),
         ]);
     }
 }

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Asset;
 use App\Models\AssetItem;
 use App\Models\Location;
+use App\Models\SchoolClass;
 use App\Models\User;
 use App\Services\LoanService;
 use Illuminate\Database\Seeder;
@@ -47,6 +48,19 @@ class DatabaseSeeder extends Seeder
                 'role' => 'superadmin',
             ]
         );
+
+        foreach ([
+            'x_tjkt_1' => 'X TJKT 1',
+            'x_tjkt_2' => 'X TJKT 2',
+            'xi_tjkt_1' => 'XI TJKT 1',
+            'xi_tjkt_2' => 'XI TJKT 2',
+            'xii_tjkt_1' => 'XII TJKT 1',
+            'xii_tjkt_2' => 'XII TJKT 2',
+            'guru_staf' => 'GURU / STAF',
+            'tamu_eksternal' => 'Tamu / Eksternal',
+        ] as $key => $label) {
+            SchoolClass::firstOrCreate(['key' => $key], ['label' => $label]);
+        }
 
         $asset = Asset::firstOrCreate(
             ['kode_aset' => 'TJKT-NET-001'],

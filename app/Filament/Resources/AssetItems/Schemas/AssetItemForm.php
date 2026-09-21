@@ -5,8 +5,10 @@ namespace App\Filament\Resources\AssetItems\Schemas;
 use App\Models\Asset;
 use App\Models\AssetItem;
 use App\Models\Location;
+use App\Services\AssetItemCode;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -33,21 +35,26 @@ class AssetItemForm
                     Action::make('generate')
                         ->icon('heroicon-m-arrow-path')
                         ->action(function (Set $set): void {
-                            $prefix = 'LTKJ-' . now()->format('Y') . '-';
-
-                            $max = AssetItem::where('nomor_seri_atau_qr', 'like', $prefix . '%')
-                                ->orderBy('nomor_seri_atau_qr', 'desc')
-                                ->value('nomor_seri_atau_qr');
-
-                            $next = 1;
-
-                            if (is_string($max) && str_starts_with($max, $prefix)) {
-                                $next = ((int) substr($max, strlen($prefix))) + 1;
-                            }
-
-                            $set('nomor_seri_atau_qr', $prefix . str_pad((string) $next, 5, '0', STR_PAD_LEFT));
+                            $set('nomor_seri_atau_qr', AssetItemCode::next());
                         })
                 ),
+
+            TextInput::make('jumlah')
+                ->label('Jumlah Unit Dibuat')
+                ->numeric()
+                ->default(1)
+                ->minValue(1)
+                ->maxValue(500)
+                ->required()
+                ->helperText('Isi > 1 untuk membuat banyak unit sekaligus. Kode sisanya digenerate otomatis.')
+                ->hiddenOn('edit'),
+
+            Textarea::make('sn_manual')
+                ->label('SN Manual (opsional)')
+                ->rows(3)
+                ->placeholder("Satu SN per baris, misal:\nSN-PC-001\nSN-PC-002")
+                ->helperText('Kosongkan bila unit tidak punya SN — sistem generate kode otomatis.')
+                ->hiddenOn('edit'),
 
             Select::make('status')
                 ->options([

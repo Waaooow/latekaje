@@ -5,6 +5,7 @@ namespace App\Filament\Imports;
 use App\Models\Asset;
 use App\Models\AssetItem;
 use App\Models\Location;
+use App\Services\AssetItemCode;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
@@ -38,8 +39,11 @@ class AssetItemImporter extends Importer
                 ->fillRecordUsing(fn () => null),
 
             ImportColumn::make('nomor_seri_atau_qr')
-                ->requiredMapping()
-                ->rules(['required', 'string', 'max:255'])
+                ->rules(['nullable', 'string', 'max:255'])
+                ->fillRecordUsing(fn () => null),
+
+            ImportColumn::make('jumlah')
+                ->rules(['nullable', 'integer', 'min:1', 'max:1000'])
                 ->fillRecordUsing(fn () => null),
 
             ImportColumn::make('kondisi')
@@ -85,9 +89,7 @@ class AssetItemImporter extends Importer
 
         $serial = trim((string) ($this->data['nomor_seri_atau_qr'] ?? ''));
 
-        if ($serial === '') {
-            return null;
-        }
+        $qty = max(1, (int) ($this->data['jumlah'] ?? 1));
 
         $kondisi = strtolower(trim((string) ($this->data['kondisi'] ?? 'baik')));
         if (! in_array($kondisi, ['baik', 'rusak', 'rusak_total'], true)) {
@@ -99,18 +101,50 @@ class AssetItemImporter extends Importer
             $status = 'tersedia';
         }
 
-        $item = AssetItem::firstOrNew([
-            'nomor_seri_atau_qr' => $serial,
-        ]);
+        // Mode satuan: SN/QR diisi manual (perilaku lama).
+        if ($serial !== '') {
+            $item = AssetItem::firstOrNew([
+                'nomor_seri_atau_qr' => $serial,
+            ]);
 
-        $item->fill([
-            'asset_id' => $asset->getKey(),
-            'kondisi' => $kondisi,
-            'location_id' => $location->getKey(),
-            'status' => $status,
-        ]);
+            $item->fill([
+                'asset_id' => $asset->getKey(),
+                'kondisi' => $kondisi,
+                'location_id' => $location->getKey(),
+                'status' => $status,
+            ]);
 
-        return $item;
+            return $item;
+        }
+
+        // Mode massal: jumlah > 1 tanpa SN → generate N unit otomatis.
+        // Unit pertama dikembalikan agar importer mencatatnya; sisanya dibuat langsung.
+        $first = null;
+
+        for ($i = 0; $i < $qty; $i++) {
+            $tries = 0;
+
+            while (true) {
+                try {
+                    $unit = AssetItem::create([
+                        'asset_id' => $asset->getKey(),
+                        'nomor_seri_atau_qr' => AssetItemCode::next(),
+                        'kondisi' => $kondisi,
+                        'location_id' => $location->getKey(),
+                        'status' => $status,
+                    ]);
+                    $first ??= $unit;
+
+                    break;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if (! str_contains($e->getMessage(), 'Duplicate entry') || ++$tries > 10) {
+                        throw $e;
+                    }
+                }
+            }
+        }
+
+        return $first;
     }
 
     public static function getCompletedNotificationBody(Import $import): string

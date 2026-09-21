@@ -62,6 +62,7 @@ class AdminPanelProvider extends PanelProvider
                     <script>
                     window.latekajeQr = {
                         _pending: null,
+                        _active: {},
                         ensureLib: function () {
                             if (window.Html5Qrcode) return Promise.resolve();
                             if (this._pending) return this._pending;
@@ -114,6 +115,12 @@ class AdminPanelProvider extends PanelProvider
                                 this.cameras = cams;
                                 const back = cams.find((c) => /back|rear|environment/i.test(c.label || ''));
                                 this.cameraId = (back || cams[0]).id;
+                                // Matikan instance lama pada elemen yang sama (anti preview ganda).
+                                const prev = window.latekajeQr._active[readerId];
+                                if (prev && prev !== this) { try { await prev.stopQuiet(); } catch (e) {} }
+                                window.latekajeQr._active[readerId] = this;
+                                const el = document.getElementById(readerId);
+                                if (el) el.innerHTML = '';
                                 this.watchRemoval();
                                 await this.start();
                             },

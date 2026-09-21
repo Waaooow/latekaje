@@ -23,6 +23,7 @@ class LoansTable
             ->columns([
                 TextColumn::make('assetItem.nomor_seri_atau_qr')
                     ->label('Kode QR')
+                    ->formatStateUsing(fn (?string $state): string => $state ?? '(unit dihapus)')
                     ->searchable()
                     ->sortable(),
 

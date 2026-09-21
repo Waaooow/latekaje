@@ -72,8 +72,16 @@ class LoanService
                 ]);
             }
 
-            /** @var AssetItem $item */
-            $item = AssetItem::lockForUpdate()->findOrFail($lockedLoan->asset_item_id);
+            /** @var AssetItem|null $item */
+            $item = $lockedLoan->asset_item_id
+                ? AssetItem::lockForUpdate()->find($lockedLoan->asset_item_id)
+                : null;
+
+            if (! $item) {
+                throw ValidationException::withMessages([
+                    'qr' => 'Unit fisik peminjaman ini sudah dihapus dari inventaris.',
+                ]);
+            }
 
             if (trim($item->nomor_seri_atau_qr) !== trim((string) ($payload['qr'] ?? ''))) {
                 throw ValidationException::withMessages([

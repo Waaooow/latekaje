@@ -29,7 +29,9 @@ class AssetItemPolicy
 
     public function delete(User $user, AssetItem $assetItem): bool
     {
+        // Boleh hapus bila tidak ada pinjaman AKTIF. Riwayat yang sudah
+        // kembali tetap tersimpan (asset_item_id di-set NULL).
         return in_array($user->role, ['superadmin', 'toolman'], true)
-            && $assetItem->loans()->count() === 0;
+            && ! $assetItem->loans()->where('status', 'aktif')->exists();
     }
 }

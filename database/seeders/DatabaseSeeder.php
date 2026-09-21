@@ -40,11 +40,18 @@ class DatabaseSeeder extends Seeder
             ['label' => 'Lab FO']
         );
 
+        $superadminPassword = env('SUPERADMIN_PASSWORD');
+
+        if (! $superadminPassword) {
+            $superadminPassword = bin2hex(random_bytes(8));
+            $this->command?->warn('SUPERADMIN_PASSWORD kosong — dibuat acak, set env untuk login.');
+        }
+
         User::firstOrCreate(
             ['email' => env('SUPERADMIN_EMAIL', 'admin@gmail.com')],
             [
                 'name' => env('SUPERADMIN_NAME', 'admin'),
-                'password' => Hash::make(env('SUPERADMIN_PASSWORD', '@Alfin488704')),
+                'password' => Hash::make($superadminPassword),
                 'role' => 'superadmin',
             ]
         );

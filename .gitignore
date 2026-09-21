@@ -35,3 +35,6 @@ serve-*.log
 tls-*.log
 *.sql.gz
 *.sql
+
+# script operasional staging (port lokal, hanya di server)
+run-*.sh

@@ -69,36 +69,38 @@ class DatabaseSeeder extends Seeder
             SchoolClass::firstOrCreate(['key' => $key], ['label' => $label]);
         }
 
-        $asset = Asset::firstOrCreate(
-            ['kode_aset' => 'TJKT-NET-001'],
-            [
-                'nama_alat' => 'Router Mikrotik',
-                'jenis' => 'Networking',
-                'spesifikasi' => 'RB450G',
-                'kegunaan' => 'praktik',
-                'stok' => 3,
-            ]
-        );
-
-        $serials = ['LTKJ-2026-00001', 'LTKJ-2026-00002', 'LTKJ-2026-00003'];
-
-        $items = [];
-        foreach ($serials as $serial) {
-            $items[] = AssetItem::firstOrCreate(
-                ['nomor_seri_atau_qr' => $serial],
+        if (env('SEED_DEMO', true)) {
+            $asset = Asset::firstOrCreate(
+                ['kode_aset' => 'TJKT-NET-001'],
                 [
-                    'asset_id' => $asset->id,
-                    'status' => 'tersedia',
-                    'kondisi' => 'baik',
-                    'location_id' => $labTjkt->id,
+                    'nama_alat' => 'Router Mikrotik',
+                    'jenis' => 'Networking',
+                    'spesifikasi' => 'RB450G',
+                    'kegunaan' => 'praktik',
+                    'stok' => 3,
                 ]
             );
-        }
 
-        try {
-            LoanService::borrow($items[0]->id, 'Budi Santoso', 'X TJKT 1');
-        } catch (\Throwable $e) {
-            // Skip demo loan if it already exists or item is unavailable.
+            $serials = ['LTKJ-2026-00001', 'LTKJ-2026-00002', 'LTKJ-2026-00003'];
+
+            $items = [];
+            foreach ($serials as $serial) {
+                $items[] = AssetItem::firstOrCreate(
+                    ['nomor_seri_atau_qr' => $serial],
+                    [
+                        'asset_id' => $asset->id,
+                        'status' => 'tersedia',
+                        'kondisi' => 'baik',
+                        'location_id' => $labTjkt->id,
+                    ]
+                );
+            }
+
+            try {
+                LoanService::borrow($items[0]->id, 'Budi Santoso', 'X TJKT 1');
+            } catch (\Throwable $e) {
+                // Skip demo loan if it already exists or item is unavailable.
+            }
         }
     }
 }

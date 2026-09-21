@@ -41,10 +41,10 @@ class DatabaseSeeder extends Seeder
         );
 
         User::firstOrCreate(
-            ['email' => 'admin@gmail.com'],
+            ['email' => env('SUPERADMIN_EMAIL', 'admin@gmail.com')],
             [
-                'name' => 'admin',
-                'password' => Hash::make('@Alfin488704'),
+                'name' => env('SUPERADMIN_NAME', 'admin'),
+                'password' => Hash::make(env('SUPERADMIN_PASSWORD', '@Alfin488704')),
                 'role' => 'superadmin',
             ]
         );

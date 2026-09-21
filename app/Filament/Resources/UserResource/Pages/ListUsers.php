@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\UserResource\Pages;
 
-// 🟢 REVISI SAKTI: Import langsung ke file kelasnya, bukan nama foldernya
 use App\Filament\Resources\UserResource\UserResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;

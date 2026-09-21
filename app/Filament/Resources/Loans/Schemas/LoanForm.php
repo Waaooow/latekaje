@@ -2,156 +2,114 @@
 
 namespace App\Filament\Resources\Loans\Schemas;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
+use App\Models\AssetItem;
+use App\Models\SchoolClass;
+use Closure;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Hidden; // 🟢 TAMBAHKAN INI
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Illuminate\Support\HtmlString;
-use App\Models\AssetItem; // 🟢 TAMBAHKAN INI
 
 class LoanForm
 {
     public static function configure(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                // 🟢 1. HIDDEN FIELD: Menampung foreign key asli untuk disimpan ke tabel database 'loans'
-                Hidden::make('asset_item_id')
-                    ->required(),
+        return $schema->components([
+            Hidden::make('asset_item_id')
+                ->required(),
 
-                // 2. INPUT KODE BARANG (Hanya jembatan UI, tidak disimpan langsung ke DB)
-                TextInput::make('nomor_seri_atau_qr')
-                    ->label('Scan / Ketik Kode QR Alat')
-                    ->required()
-                    ->placeholder('Arahkan kamera ke stiker QR atau ketik manual...')
-                    ->live() // Wajib live agar perubahan terbaca secara realtime
-                    ->dehydrated(false) // 🟢 PENTING: Mencegah Filament memasukkan string ini ke tabel loans
-                    
-                    // 🟢 Validasi kustom biar gak crash kalau kode salah atau alat lagi dipinjam
-                    ->rules([
-                        fn () => function (string $attribute, $value, \Closure $fail) {
-                            $item = AssetItem::where('nomor_seri_atau_qr', $value)->first();
-                            if (!$item) {
-                                $fail('❌ Kode QR / Nomor Seri tidak terdaftar di sistem LATEKAJE!');
-                                return;
-                            }
-                            if ($item->status === 'dipinjam') {
-                                $fail('⚠️ Gagal! Alat ini statusnya sedang dipinjam oleh siswa lain.');
-                            }
+            Placeholder::make('qr_scanner')
+                ->hiddenLabel()
+                ->content(new HtmlString('
+                    <div x-data="latekajeScanner(\'reader-loan-inline\', \'loan-qr-field\')" x-init="init()">
+                        <div id="reader-loan-inline" style="min-height:240px" class="w-full overflow-hidden rounded-lg border border-dashed border-gray-300 bg-black"></div>
+                        <p class="mt-2 text-sm text-gray-500" x-text="status"></p>
+                        <p class="mt-1 text-sm text-red-600" x-show="error" x-text="error"></p>
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <select x-show="cameras.length > 1" x-model="cameraId" @change="restart()" class="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
+                                <template x-for="c in cameras" :key="c.id"><option :value="c.id" x-text="c.label || c.id"></option></template>
+                            </select>
+                            <button type="button" @click="restart()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Scan Ulang</button>
+                            <button type="button" @click="stop()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Matikan Kamera</button>
+                        </div>
+                    </div>
+                ')),
+
+            TextInput::make('nomor_seri_atau_qr')
+                ->label('Scan / Ketik Kode QR Alat')
+                ->placeholder('cth: LTKJ-0001 — scan QR atau ketik manual')
+                ->live()
+                ->dehydrated(false)
+                ->required()
+                ->rules([
+                    fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                        if (blank($value)) {
+                            return;
                         }
-                    ])
-                    
-                    // 🟢 Sinkronisasi: Cari ID barang di DB berdasarkan string teks yang di-scan/diketik
-                    ->afterStateUpdated(function ($state, $set) {
-                        $item = AssetItem::where('nomor_seri_atau_qr', $state)->first();
-                        if ($item) {
-                            $set('asset_item_id', $item->id); // Isi hidden field otomatis
-                        } else {
-                            $set('asset_item_id', null);
+
+                        $item = AssetItem::query()
+                            ->where('nomor_seri_atau_qr', $value)
+                            ->first();
+
+                        if (! $item) {
+                            $fail('Kode alat tidak terdaftar.');
+
+                            return;
                         }
-                    })
 
-                    // 🟢 Mengisi kembali kolom teks saat halaman EDIT data lama dibuka
-                    ->afterStateHydrated(function ($set, $record) {
-                        if ($record && $record->asset_item_id) {
-                            $item = AssetItem::find($record->asset_item_id);
-                            if ($item) {
-                                $set('nomor_seri_atau_qr', $item->nomor_seri_atau_qr);
-                            }
+                        if ($item->status === 'dipinjam' || $item->activeLoan()->exists()) {
+                            $fail('Alat sedang dipinjam.');
+
+                            return;
                         }
-                    })
-                    
-                    // 🟢 TOMBOL SCANNER WEBCAM
-                    ->suffixAction(
-                        \Filament\Actions\Action::make('scanWebcamQr')
-                            ->icon('heroicon-o-camera')
-                            ->color('warning')
-                            ->tooltip('Buka Kamera QR Scanner')
-                            
-                            ->modalHeading('Arahkan Stiker QR ke Kamera Lab')
-                            ->modalWidth('md')
-                            ->modalSubmitAction(false) 
-                            
-                            ->modalContent(new HtmlString('
-                                <div x-data="{
-                                    html5QrCode: null,
-                                    
-                                    initScanner() {
-                                        if (typeof Html5Qrcode === \'undefined\') {
-                                            let script = document.createElement(\'script\');
-                                            script.src = \'https://unpkg.com/html5-qrcode\';
-                                            script.onload = () => this.startCamera();
-                                            document.head.appendChild(script);
-                                        } else {
-                                            this.startCamera();
-                                        }
-                                    },
-                                    
-                                    startCamera() {
-                                        this.html5QrCode = new Html5Qrcode(\'reader-loan-scanner\');
-                                        this.html5QrCode.start(
-                                            { facingMode: \'environment\' }, 
-                                            {
-                                                fps: 15,
-                                                qrbox: { width: 220, height: 220 }
-                                            },
-                                            (decodedText) => {
-                                                // Masukkan hasil scan ke field text UI
-                                                $wire.set(\'data.nomor_seri_atau_qr\', decodedText);
-                                                
-                                                // Trigger event update secara manual agar afterStateUpdated() langsung berjalan
-                                                $dispatch(\'input\'); 
-                                                
-                                                this.stopCamera();
-                                                
-                                                let closeBtn = document.querySelector(\'.fi-modal-close-btn\');
-                                                if (closeBtn) closeBtn.click();
-                                            },
-                                            (errorMessage) => {}
-                                        ).catch(err => console.error(err));
-                                    },
-                                    
-                                    stopCamera() {
-                                        if (this.html5QrCode) {
-                                            this.html5QrCode.stop().catch(err => console.error(err));
-                                        }
-                                    }
-                                }"
-                                x-init="initScanner()"
-                                x-on:destroy="stopCamera()"
-                                class="flex flex-col items-center justify-center p-2 text-center">
-                                    
-                                    <div id="reader-loan-scanner" class="w-full max-w-xs overflow-hidden rounded-xl border-2 border-dashed border-gray-400 bg-gray-900" style="aspect-ratio: 1/1;"></div>
-                                    
-                                    <p class="mt-3 text-xs text-gray-500 animate-pulse">
-                                        Posisikan stiker QR Code tepat di dalam kotak kamera.
-                                    </p>
-                                </div>
-                            '))
-                    ),
 
-                // 3. INPUT NAMA SISWA
-                TextInput::make('nama_siswa')
-                    ->label('Nama Lengkap Siswa')
-                    ->required()
-                    ->placeholder('Ketik nama peminjam...')
-                    ->maxLength(255),
+                        if ($item->kondisi !== 'baik') {
+                            $fail('Alat kondisi rusak, tidak layak pinjam.');
+                        }
+                    },
+                ])
+                ->afterStateUpdated(function (Set $set, ?string $state): void {
+                    if (blank($state)) {
+                        $set('asset_item_id', null);
 
-                // 4. DROPDOWN KELAS
-                Select::make('kelas')
-                    ->label('Kelas / Jabatan')
-                    ->options([
-                        'X TJKT 1' => 'X TJKT 1',
-                        'X TJKT 2' => 'X TJKT 2',
-                        'XI TJKT 1' => 'XI TJKT 1',
-                        'XI TJKT 2' => 'XI TJKT 2',
-                        'XII TJKT 1' => 'XII TJKT 1',
-                        'XII TJKT 2' => 'XII TJKT 2',
-                        'GURU / STAF' => '💼 Guru / Staf Instruktur',
-                    ])
-                    ->required()
-                    ->searchable()
-                    ->placeholder('Pilih kelas siswa...'),
-            ]);
+                        return;
+                    }
+
+                    $item = AssetItem::query()
+                        ->where('nomor_seri_atau_qr', $state)
+                        ->first();
+
+                    $set('asset_item_id', $item?->getKey());
+                })
+                ->afterStateHydrated(function (Set $set, $state, $record): void {
+                    if ($record?->assetItem) {
+                        $set('nomor_seri_atau_qr', $record->assetItem->nomor_seri_atau_qr);
+                    }
+                })
+                ->extraAttributes(['id' => 'loan-qr-field']),
+
+            TextInput::make('return_pin')
+                ->label('PIN Pengembalian (6 digit)')
+                ->required()
+                ->length(6)
+                ->rule('regex:/^[0-9]{6}$/')
+                ->default(fn (): string => sprintf('%06d', random_int(0, 999999)))
+                ->helperText('Sudah terisi otomatis — boleh diganti. WAJIB diingat: tanpa PIN ini alat tidak bisa dikembalikan.'),
+
+            TextInput::make('nama_siswa')
+                ->label('Nama Peminjam')
+                ->required()
+                ->maxLength(255),
+
+            Select::make('kelas')
+                ->label('Kelas / Asal Peminjam')
+                ->required()
+                ->searchable()
+                ->options(fn () => SchoolClass::orderBy('label')->pluck('label', 'label'))
+                ->helperText('Kelola daftar via menu Kelas.'),
+        ]);
     }
 }

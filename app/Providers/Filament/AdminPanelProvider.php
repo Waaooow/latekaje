@@ -3,21 +3,21 @@
 namespace App\Providers\Filament;
 
 use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Filament\View\PanelsRenderHook;
-use Illuminate\Support\HtmlString;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -28,32 +28,26 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            
-            // 🟢 TIGA BARIS SAKTI: Pasang Logo Baru & Favicon Bebas Versi
-            ->brandLogo(asset('images/logo.png'))
+            ->brandLogo('/images/logo.png')
             ->brandLogoHeight('2.8rem')
-            ->favicon(asset('images/favicon.png'))
-            
+            ->favicon('/images/favicon.png')
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                // KUNCI PERBAIKAN: Dikosongkan agar kotak Welcome & Info Filament bawaan hilang!
-                // Widget buatan kita (AssetSummaryTable) akan otomatis masuk lewat baris discoverWidgets di atas.
-            ])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
-                PreventRequestForgery::class,
+                VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
@@ -61,15 +55,142 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-
             ->renderHook(
-            PanelsRenderHook::FOOTER,
-            fn () => new HtmlString('
-                <footer class="w-full text-center py-4 text-xs text-gray-400 dark:text-gray-500 border-t border-gray-200 dark:border-gray-800 mt-6">
-                    &copy; ' . date('Y') . ' <span class="font-semibold text-primary-500">LATEKAJE</span>. All Rights Reserved. 
-                    <span class="mx-1">|</span> Crafted with ❤️ by <span class="underline">Alfin & Gemini AI</span>
-                </footer>
-            ')
-        );
+                PanelsRenderHook::HEAD_END,
+                fn (): string => <<<'HTML'
+                    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+                    <script>
+                    window.latekajeQr = {
+                        _pending: null,
+                        _active: {},
+                        ensureLib: function () {
+                            if (window.Html5Qrcode) return Promise.resolve();
+                            if (this._pending) return this._pending;
+                            this._pending = new Promise(function (resolve, reject) {
+                                var s = document.createElement('script');
+                                s.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+                                s.onload = function () { window.Html5Qrcode ? resolve() : reject(new Error('lib')); };
+                                s.onerror = function () { reject(new Error('lib')); };
+                                document.head.appendChild(s);
+                            });
+                            return this._pending;
+                        }
+                    };
+
+                    function latekajeScanner(readerId, inputId) {
+                        return {
+                            scanner: null,
+                            cameras: [],
+                            cameraId: '',
+                            status: 'Menyiapkan kamera…',
+                            error: '',
+                            locked: false,
+                            observer: null,
+                            async init() {
+                                if (!window.isSecureContext) {
+                                    this.status = '';
+                                    this.error = 'Akses kamera membutuhkan HTTPS. Buka aplikasi lewat alamat https://';
+                                    return;
+                                }
+                                try {
+                                    await window.latekajeQr.ensureLib();
+                                } catch (e) {
+                                    this.status = '';
+                                    this.error = 'Library scanner gagal dimuat. Periksa koneksi internet lalu tekan Scan Ulang.';
+                                    return;
+                                }
+                                let cams = [];
+                                try {
+                                    cams = await Html5Qrcode.getCameras();
+                                } catch (e) {
+                                    this.status = '';
+                                    this.error = 'Izin kamera ditolak atau tidak ada kamera. Izinkan akses kamera di browser (ikon kamera di address bar), lalu tekan Scan Ulang.';
+                                    return;
+                                }
+                                if (!cams || !cams.length) {
+                                    this.status = '';
+                                    this.error = 'Tidak ada kamera yang ditemukan di perangkat ini. Ketik kode manual.';
+                                    return;
+                                }
+                                this.cameras = cams;
+                                const back = cams.find((c) => /back|rear|environment/i.test(c.label || ''));
+                                this.cameraId = (back || cams[0]).id;
+                                // Matikan instance lama pada elemen yang sama (anti preview ganda).
+                                const prev = window.latekajeQr._active[readerId];
+                                if (prev && prev !== this) { try { await prev.stopQuiet(); } catch (e) {} }
+                                window.latekajeQr._active[readerId] = this;
+                                const el = document.getElementById(readerId);
+                                if (el) el.innerHTML = '';
+                                this.watchRemoval();
+                                await this.start();
+                            },
+                            async start() {
+                                this.error = '';
+                                this.locked = false;
+                                this.status = 'Membuka kamera…';
+                                try {
+                                    this.scanner = new Html5Qrcode(readerId);
+                                } catch (e) {
+                                    this.status = '';
+                                    this.error = 'Scanner gagal diinisialisasi.';
+                                    return;
+                                }
+                                try {
+                                    await this.scanner.start(
+                                        this.cameraId,
+                                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                                        (txt) => this.onScan(txt),
+                                        () => {}
+                                    );
+                                    this.status = 'Arahkan QR alat ke kamera…';
+                                } catch (e) {
+                                    this.status = '';
+                                    this.error = 'Kamera tidak bisa dibuka (' + ((e && e.message) || e) + ').';
+                                }
+                            },
+                            async restart() { await this.stopQuiet(); await this.start(); },
+                            onScan(txt) {
+                                if (this.locked) return;
+                                this.locked = true;
+                                const root = document.getElementById(inputId);
+                                const input = root ? (root.tagName === 'INPUT' ? root : root.querySelector('input')) : null;
+                                if (input) {
+                                    input.focus();
+                                    input.value = txt;
+                                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                                    this.status = 'Terdeteksi: ' + txt + ' — mengisi form…';
+                                } else {
+                                    this.status = 'Terdeteksi: ' + txt + ' — form tidak ditemukan!';
+                                }
+                                this.stopQuiet().then(() => {
+                                    const btn = document.querySelector('.fi-modal-close-btn');
+                                    if (btn) setTimeout(() => btn.click(), 700);
+                                });
+                            },
+                            async stop() { await this.stopQuiet(); this.status = 'Kamera dimatikan.'; },
+                            async stopQuiet() {
+                                try { if (this.scanner) { await this.scanner.stop(); this.scanner.clear(); } } catch (e) {}
+                                this.scanner = null;
+                            },
+                            watchRemoval() {
+                                const self = this;
+                                this.observer = new MutationObserver(function () {
+                                    if (!document.getElementById(readerId)) {
+                                        self.stopQuiet();
+                                        if (self.observer) self.observer.disconnect();
+                                    }
+                                });
+                                this.observer.observe(document.body, { childList: true, subtree: true });
+                            }
+                        };
+                    }
+                    </script>
+                    HTML,
+            )
+            ->renderHook(
+                PanelsRenderHook::FOOTER,
+                fn (): string => Blade::render('<div class="text-center text-xs text-gray-500 py-4">LATEKAJE © {{ date("Y") }}, Crafted by Alfin</div>'),
+            );
     }
 }

@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Menambahkan kolom role setelah email, default-nya adalah siswa
             $table->string('role')->default('siswa')->after('email');
         });
     }

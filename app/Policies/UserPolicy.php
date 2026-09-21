@@ -11,6 +11,11 @@ class UserPolicy
         return $user->isSuperadmin();
     }
 
+    public function view(User $user, User $model): bool
+    {
+        return $user->isSuperadmin();
+    }
+
     public function create(User $user): bool
     {
         return $user->isSuperadmin();
@@ -23,7 +28,6 @@ class UserPolicy
 
     public function delete(User $user, User $model): bool
     {
-        // Superadmin bisa hapus user lain, TAPI tidak bisa hapus dirinya sendiri
-        return $user->role === 'superadmin' && $user->id !== $model->id;
+        return $user->isSuperadmin() && $user->id !== $model->id;
     }
 }

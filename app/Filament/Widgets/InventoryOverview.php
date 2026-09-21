@@ -3,39 +3,51 @@
 namespace App\Filament\Widgets;
 
 use App\Models\AssetItem;
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class InventoryOverview extends BaseWidget
+class InventoryOverview extends StatsOverviewWidget
 {
-    // 🟢 Urutan 1: Berada di baris paling atas
     protected static ?int $sort = 1;
 
-    // 🟢 Rentangkan penuh ke samping agar menjadi fondasi utama
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected function getStats(): array
     {
+        $total = AssetItem::query()->count();
+
+        $siapPakai = AssetItem::query()
+            ->where('status', 'tersedia')
+            ->where('kondisi', 'baik')
+            ->count();
+
+        $dipinjam = AssetItem::query()
+            ->where('status', 'dipinjam')
+            ->count();
+
+        $karantina = AssetItem::query()
+            ->whereIn('kondisi', ['rusak', 'rusak_total'])
+            ->count();
+
         return [
-            Stat::make('Total Unit Barang', AssetItem::count())
-                ->description('Semua unit fisik terdaftar')
-                ->descriptionIcon('heroicon-m-squares-plus')
-                ->color('info'),
+            Stat::make('Total Unit', number_format($total))
+                ->description('Seluruh unit terdaftar')
+                ->icon('heroicon-o-archive-box'),
 
-            Stat::make('Unit Siap Pakai (Ready)', AssetItem::where('status', 'tersedia')->where('kondisi', 'baik')->count())
-                ->description('Kondisi baik & tersedia')
-                ->descriptionIcon('heroicon-m-check-circle')
-                ->color('success'),
+            Stat::make('Siap Pakai', number_format($siapPakai))
+                ->description('Tersedia + kondisi baik')
+                ->color('success')
+                ->icon('heroicon-o-check-circle'),
 
-            Stat::make('Sedang Dipinjam', AssetItem::where('status', 'dipinjam')->count())
-                ->description('Unit di tangan siswa/guru')
-                ->descriptionIcon('heroicon-m-arrow-path')
-                ->color('warning'),
+            Stat::make('Dipinjam', number_format($dipinjam))
+                ->description('Sedang dipinjam siswa')
+                ->color('warning')
+                ->icon('heroicon-o-clipboard-document-list'),
 
-            Stat::make('Karantina (Rusak)', AssetItem::whereIn('kondisi', ['rusak', 'rusak_total'])->count())
-                ->description('Perlu perbaikan / afkir')
-                ->descriptionIcon('heroicon-m-exclamation-triangle')
-                ->color('danger'),
+            Stat::make('Karantina', number_format($karantina))
+                ->description('Rusak + rusak total')
+                ->color('danger')
+                ->icon('heroicon-o-wrench'),
         ];
     }
 }

@@ -6,66 +6,65 @@ use App\Filament\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Models\User;
-use BackedEnum;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-// 🟢 KUNCI PERBAIKAN: Menggunakan jalur Actions yang sudah diunifikasi
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $navigationLabel = 'Kelola User';
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
-
     protected static ?string $modelLabel = 'User';
+
     protected static ?string $pluralModelLabel = 'User';
 
     public static function form(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                TextInput::make('name')
-                    ->label('Nama Lengkap')
-                    ->required()
-                    ->maxLength(255),
+        return $schema->components([
+            TextInput::make('name')
+                ->label('Nama')
+                ->required()
+                ->maxLength(255),
 
-                TextInput::make('email')
-                    ->label('Alamat Email')
-                    ->email()
-                    ->required()
-                    ->unique(ignoreRecord: true)
-                    ->maxLength(255),
+            TextInput::make('email')
+                ->label('Email')
+                ->email()
+                ->required()
+                ->unique(ignoreRecord: true)
+                ->maxLength(255),
 
-                Select::make('role')
-                    ->label('Hak Akses (Role)')
-                    ->options([
-                        'superadmin' => 'Superadmin',
-                        'toolman'    => 'Toolman (Kepala Lab)',
-                        'anak_pkl'   => 'Anak PKL (Asisten)',
-                        'siswa'      => 'Siswa (Peminjam)',
-                    ])
-                    ->required()
-                    ->default('siswa'),
+            Select::make('role')
+                ->label('Role')
+                ->required()
+                ->default('siswa')
+                ->options([
+                    'superadmin' => 'Superadmin',
+                    'toolman' => 'Toolman',
+                    'anak_pkl' => 'Anak PKL',
+                    'siswa' => 'Siswa',
+                ]),
 
-                TextInput::make('password')
-                    ->label('Password')
-                    ->password()
-                    ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                    ->dehydrated(fn ($state) => filled($state))
-                    ->required(fn (string $context): bool => $context === 'create')
-                    ->placeholder(fn (string $context): string => $context === 'edit' ? 'Kosongkan jika tidak ingin mengubah password' : ''),
-            ]);
+            TextInput::make('password')
+                ->label('Password')
+                ->password()
+                ->revealable()
+                ->dehydrated(fn ($state): bool => filled($state))
+                ->dehydrateStateUsing(fn ($state): ?string => filled($state) ? Hash::make($state) : null)
+                ->required(fn (string $context): bool => $context === 'create')
+                ->maxLength(255),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -79,41 +78,36 @@ class UserResource extends Resource
 
                 TextColumn::make('email')
                     ->label('Email')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
 
                 TextColumn::make('role')
                     ->label('Role')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'superadmin' => 'danger',
-                        'toolman'    => 'info',
-                        'anak_pkl'   => 'warning',
-                        'siswa'      => 'gray',
-                        default      => 'gray',
-                    })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'superadmin' => 'Superadmin',
-                        'toolman'    => 'Toolman',
-                        'anak_pkl'   => 'Anak PKL',
-                        'siswa'      => 'Siswa',
-                        default      => $state,
+                        'toolman' => 'Toolman',
+                        'anak_pkl' => 'Anak PKL',
+                        default => 'Siswa',
                     })
-                    ->sortable(),
+                    ->color(fn (string $state): string => match ($state) {
+                        'superadmin' => 'danger',
+                        'toolman' => 'warning',
+                        'anak_pkl' => 'info',
+                        default => 'gray',
+                    }),
 
                 TextColumn::make('created_at')
-                    ->label('Terdaftar Pada')
-                    ->dateTime('d M Y H:i')
+                    ->label('Dibuat')
+                    ->dateTime()
+                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
-            // 🟢 BERSIH & AMAN: Memanggil langsung tanpa prefiks Tables\
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

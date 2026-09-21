@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\UserResource\Pages;
 
-// 🟢 REVISI SAKTI: Jalur import sudah diperbaiki
 use App\Filament\Resources\UserResource\UserResource;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -12,6 +11,6 @@ class CreateUser extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return static::getResource()::getUrl('index');
     }
 }

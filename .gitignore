@@ -25,3 +25,16 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# staging & secrets lokal (jangan pernah di-commit)
+*.bak
+.env.bak*
+/ssl-v2/
+ssl-v2/
+serve-*.log
+tls-*.log
+*.sql.gz
+*.sql
+
+# script operasional staging (port lokal, hanya di server)
+run-*.sh

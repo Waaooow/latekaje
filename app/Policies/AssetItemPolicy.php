@@ -9,24 +9,29 @@ class AssetItemPolicy
 {
     public function viewAny(User $user): bool
     {
-        return !$user->isSiswa();
+        return $user->role !== 'siswa';
+    }
+
+    public function view(User $user, AssetItem $assetItem): bool
+    {
+        return $user->role !== 'siswa';
     }
 
     public function create(User $user): bool
     {
-        // Anak PKL boleh membantu menginput fisik barang baru yang masuk ke lab
-        return $user->isSuperadmin() || $user->isToolman() || $user->isAnakPkl();
+        return in_array($user->role, ['superadmin', 'toolman', 'anak_pkl'], true);
     }
 
     public function update(User $user, AssetItem $assetItem): bool
     {
-        // Anak PKL boleh mengubah status kondisi barang (misal: update ke 'rusak')
-        return $user->isSuperadmin() || $user->isToolman() || $user->isAnakPkl();
+        return in_array($user->role, ['superadmin', 'toolman', 'anak_pkl'], true);
     }
 
     public function delete(User $user, AssetItem $assetItem): bool
     {
-        // 🛑 Anak PKL TIDAK BOLEH menghapus unit fisik barang!
-        return $user->isSuperadmin() || $user->isToolman();
+        // Boleh hapus bila tidak ada pinjaman AKTIF. Riwayat yang sudah
+        // kembali tetap tersimpan (asset_item_id di-set NULL).
+        return in_array($user->role, ['superadmin', 'toolman'], true)
+            && ! $assetItem->loans()->where('status', 'aktif')->exists();
     }
 }

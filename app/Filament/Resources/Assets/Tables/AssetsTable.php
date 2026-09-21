@@ -2,96 +2,148 @@
 
 namespace App\Filament\Resources\Assets\Tables;
 
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Builder;
-
-// 🟢 FIX IMPORT: Menggunakan import resmi unifikasi Filament baru, bersih dari backslash inline
-use Filament\Actions\EditAction;
+use App\Models\Location;
+use App\Services\AssetItemService;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class AssetsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            // 🟢 FIX 1: Menggunakan modifyQueryUsing agar tidak merusak fitur search & filter bawaan Filament Resource
             ->modifyQueryUsing(fn (Builder $query) => $query->withCount([
-                'assetItems', 
-                'assetItems as unit_baik' => fn ($query) => $query->where('kondisi', 'baik'),
-                'assetItems as unit_rusak' => fn ($query) => $query->where('kondisi', 'rusak'),
-                'assetItems as unit_rusak_total' => fn ($query) => $query->where('kondisi', 'rusak_total'),
+                'assetItems',
+                'assetItems as unit_baik' => fn (Builder $q) => $q->where('kondisi', 'baik'),
+                'assetItems as unit_rusak' => fn (Builder $q) => $q->where('kondisi', 'rusak'),
+                'assetItems as unit_rusak_total' => fn (Builder $q) => $q->where('kondisi', 'rusak_total'),
             ]))
-            
             ->columns([
                 TextColumn::make('kode_aset')
-                    ->label('Kode Aset')
-                    ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
 
                 TextColumn::make('nama_alat')
-                    ->label('Nama Alat')
-                    ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
 
                 TextColumn::make('jenis')
-                    ->label('Jenis Alat')
                     ->badge()
                     ->color('info'),
 
                 TextColumn::make('spesifikasi')
-                    ->label('Spesifikasi')
                     ->limit(30)
-                    ->searchable(),
+                    ->tooltip(fn ($record): ?string => $record->spesifikasi),
 
-                // 🟢 FIX 2: Dibuat menjadi badge dan ditambahkan mapping emoji agar sinkron dengan Form Baru
                 TextColumn::make('kegunaan')
-                    ->label('Kegunaan')
                     ->badge()
-                    ->color('gray')
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'praktik' => '🛠️ Praktik',
-                        'non_praktik' => '💼 Non-Praktik',
-                        'Praktik Siswa' => '👨‍🎓 Praktik Siswa',
-                        'Praktik Guru' => '👨‍🏫 Praktik Guru',
-                        'Ujian/CBT' => '📝 Ujian / CBT',
-                        default => $state,
+                        'non_praktik' => '📋 Non Praktik',
+                        'Praktik Siswa' => '🎓 Praktik Siswa',
+                        'Praktik Guru' => '🧑‍🏫 Praktik Guru',
+                        'Ujian/CBT' => '💻 Ujian/CBT',
+                        'lainnya' => '✨ Lainnya',
+                        default => (string) $state,
                     }),
 
                 TextColumn::make('status_kondisi')
-                    ->label('Kondisi Unit')
+                    ->label('Status Kondisi')
                     ->html()
-                    ->state(function ($record) {
-                        $baik = $record->unit_baik ?? 0;
-                        $rusak = $record->unit_rusak ?? 0;
-                        $rusakTotal = $record->unit_rusak_total ?? 0;
+                    ->getStateUsing(function ($record): string {
+                        $baik = (int) ($record->unit_baik ?? 0);
+                        $rusak = (int) ($record->unit_rusak ?? 0);
+                        $rusakTotal = (int) ($record->unit_rusak_total ?? 0);
 
-                        return "
-                            <div class='flex flex-wrap gap-1'>
-                                <span class='px-2 py-0.5 text-xs font-semibold rounded-md bg-green-500/10 text-green-500 border border-green-500/20'>Baik: {$baik}</span>
-                                <span class='px-2 py-0.5 text-xs font-semibold rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20'>Rusak: {$rusak}</span>
-                                <span class='px-2 py-0.5 text-xs font-semibold rounded-md bg-danger-500/10 text-danger-500 border border-danger-500/20'>Rusak Total: {$rusakTotal}</span>
-                            </div>
-                        ";
+                        return "<span class=\"fi-badge\">Baik: {$baik}</span> "
+                            . "<span class=\"fi-badge\">Rusak: {$rusak}</span> "
+                            . "<span class=\"fi-badge\">Rusak Total: {$rusakTotal}</span>";
                     }),
 
                 TextColumn::make('asset_items_count')
-                    ->label('Jumlah Total')
+                    ->label('Jumlah Unit')
+                    ->counts('assetItems')
                     ->badge()
-                    ->color('gray')
-                    ->alignCenter()
                     ->sortable(),
             ])
-            
-            // 🟢 FIX 3: Rapi dan aman dari eror compiler
             ->actions([
+                Action::make('tambahUnit')
+                    ->label('Tambah Unit')
+                    ->icon('heroicon-o-plus-circle')
+                    ->color('info')
+                    ->modalHeading(fn ($record) => 'Tambah Unit: '.$record->nama_alat)
+                    ->form([
+                        TextInput::make('jumlah')
+                            ->label('Jumlah Unit')
+                            ->numeric()
+                            ->default(1)
+                            ->minValue(1)
+                            ->maxValue(500)
+                            ->required(),
+
+                        Select::make('location_id')
+                            ->label('Lokasi Penempatan')
+                            ->options(fn () => Location::orderBy('label')->pluck('label', 'id'))
+                            ->default(fn () => Location::where('key', 'gudang')->value('id'))
+                            ->required(),
+
+                        Select::make('kondisi')
+                            ->label('Kondisi Awal')
+                            ->options([
+                                'baik' => 'Baik',
+                                'rusak' => 'Rusak',
+                                'rusak_total' => 'Rusak Total',
+                            ])
+                            ->default('baik')
+                            ->required(),
+
+                        Textarea::make('sn_manual')
+                            ->label('SN Manual (opsional)')
+                            ->rows(3)
+                            ->placeholder("Satu SN per baris. Sisanya digenerate otomatis.")
+                            ->helperText('Kosongkan bila unit tidak punya SN.'),
+                    ])
+                    ->action(function ($record, array $data): void {
+                        $serials = collect(preg_split('/\r\n|\r|\n/', (string) ($data['sn_manual'] ?? '')))
+                            ->map(fn ($s) => trim((string) $s))
+                            ->filter()
+                            ->values()
+                            ->all();
+
+                        $qty = max((int) $data['jumlah'], count($serials), 1);
+
+                        $units = AssetItemService::bulkCreate(
+                            $record,
+                            $qty,
+                            (int) $data['location_id'],
+                            (string) $data['kondisi'],
+                            'tersedia',
+                            $serials,
+                        );
+
+                        Notification::make()
+                            ->title($units->count().' unit ditambahkan ke '.$record->nama_alat)
+                            ->body('Kode: '.$units->first()->nomor_seri_atau_qr.' s/d '.$units->last()->nomor_seri_atau_qr)
+                            ->success()
+                            ->send();
+                    }),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
-
             ->bulkActions([
-                DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
             ]);
     }
 }

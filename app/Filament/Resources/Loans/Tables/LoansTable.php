@@ -2,15 +2,18 @@
 
 namespace App\Filament\Resources\Loans\Tables;
 
-use Filament\Tables\Table;
+use App\Services\LoanService;
+use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Actions\Action; 
-use Filament\Forms;
-use Filament\Notifications\Notification;
-use Illuminate\Support\HtmlString;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Schema as FacadesSchema;
+use Illuminate\Support\HtmlString;
+use Illuminate\Validation\ValidationException;
 
 class LoansTable
 {
@@ -19,18 +22,23 @@ class LoansTable
         return $table
             ->columns([
                 TextColumn::make('assetItem.nomor_seri_atau_qr')
-                    ->label('Kode QR Unit')
+                    ->label('Kode QR')
+                    ->formatStateUsing(fn (?string $state): string => $state ?? '(unit dihapus)')
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('nama_siswa')
-                    ->label('Nama Peminjam')
+                    ->label('Peminjam')
+                    ->description(fn ($record) => $record->kelas)
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('kelas')
-                    ->label('Kelas')
-                    ->sortable(),
+                TextColumn::make('return_pin')
+                    ->label('PIN')
+                    ->badge()
+                    ->color('info')
+                    ->copyable()
+                    ->visible(fn () => ! auth()->user()?->isSiswa()),
 
                 TextColumn::make('tanggal_pinjam')
                     ->label('Tgl Pinjam')
@@ -46,183 +54,123 @@ class LoansTable
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'aktif' => 'warning',
-                        'kembali' => 'success',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'aktif' => '🔄 Dipinjam',
-                        'kembali' => '✅ Kembali',
-                        default => $state,
-                    }),
+                    ->formatStateUsing(fn (string $state): string => $state === 'aktif' ? 'Dipinjam' : 'Kembali')
+                    ->color(fn (string $state): string => $state === 'aktif' ? 'warning' : 'success'),
+
+                TextColumn::make('returned_by')
+                    ->label('Dikembalikan Oleh')
+                    ->description(fn ($record) => trim(($record->return_relation === 'wakil' ? 'Di Wakilkan' : 'Sendiri').($record->received_by ? ' · Diterima: '.$record->received_by : '')))
+                    ->placeholder('-')
+                    ->toggleable(),
+
+                TextColumn::make('return_method')
+                    ->label('Metode')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state === 'petugas' ? 'Petugas' : ($state ? 'Mandiri' : '-'))
+                    ->color(fn (?string $state): string => $state === 'petugas' ? 'info' : 'gray')
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Filter Log')
+                    ->label('Status')
                     ->options([
-                        'aktif' => '🔄 Sedang Dipinjam',
-                        'kembali' => '✅ Sudah Kembali',
-                        'semua' => '📋 Log (Semua Data)',
+                        'semua' => 'Semua',
+                        'aktif' => 'Dipinjam',
+                        'kembali' => 'Kembali',
                     ])
                     ->default('aktif')
-                    ->selectablePlaceholder(false)
-                    ->query(function (Builder $query, array $data) {
-                        if ($data['value'] === 'aktif') {
-                            $query->where('status', 'aktif');
-                        } elseif ($data['value'] === 'kembali') {
-                            $query->where('status', 'kembali');
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+
+                        if (blank($value) || $value === 'semua') {
+                            return $query;
                         }
+
+                        return $query->where('status', $value);
                     }),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('kembalikan')
-                    ->label('Kembalikan Alat')
-                    ->icon('heroicon-o-arrow-path')
+                    ->label('Kembalikan')
+                    ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn ($record) => $record->status === 'aktif')
-                    
-                    ->modalHeading('Verifikasi Pengembalian Alat')
-                    ->modalDescription('Silakan dekatkan kode QR barang ke kamera di bawah, lalu isi data verifikasi.')
-                    ->modalSubmitActionLabel('Verifikasi & Proses Kembali')
-                    
-                    ->form([
-                        Forms\Components\Placeholder::make('scanner_camera_live')
-                            ->label('Kamera Scanner Aktif')
-                            ->content(new HtmlString('
-                                <!-- 🟢 INJEKSI CSS: Paksa elemen video agar tetap lurus (tidak mirror) -->
-                                <style>
-                                    #reader-table-embedded video {
-                                        transform: scaleX(1) !important;
-                                        -webkit-transform: scaleX(1) !important;
-                                    }
-                                </style>
-
-                                <div x-data="{
-                                    html5QrCode: null,
-                                    scanned: false,
-                                    scannedCode: \'\',
-                                    initScanner() {
-                                        if (typeof Html5Qrcode === \'undefined\') {
-                                            let script = document.createElement(\'script\');
-                                            script.src = \'https://unpkg.com/html5-qrcode\';
-                                            script.onload = () => this.startCamera();
-                                            document.head.appendChild(script);
-                                        } else {
-                                            this.startCamera();
-                                        }
-                                    },
-                                    startCamera() {
-                                        this.scanned = false;
-                                        if (this.html5QrCode) { this.html5QrCode.clear(); }
-                                        this.html5QrCode = new Html5Qrcode(\'reader-table-embedded\');
-                                        this.html5QrCode.start(
-                                            { facingMode: \'environment\' },
-                                            { fps: 15, qrbox: { width: 180, height: 180 } },
-                                            (decodedText) => {
-                                                let inputField = document.getElementById(\'qr-table-return-field\');
-                                                if (inputField) {
-                                                    inputField.value = decodedText;
-                                                    inputField.dispatchEvent(new Event(\'input\'));
-                                                }
-                                                this.stopCamera();
-                                                this.scanned = true;
-                                                this.scannedCode = decodedText;
-                                            },
-                                            (errorMessage) => {}
-                                        ).catch(err => console.error(err));
-                                    },
-                                    stopCamera() {
-                                        if (this.html5QrCode) {
-                                            this.html5QrCode.stop().catch(err => console.error(err));
-                                        }
-                                    }
-                                }"
-                                x-init="initScanner()"
-                                x-on:destroy="stopCamera()"
-                                class="flex flex-col items-center justify-center p-3 text-center bg-gray-50 dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 mb-2">
-                                    
-                                    <div x-show="!scanned" class="w-full flex flex-col items-center">
-                                        <div id="reader-table-embedded" class="w-full max-w-xs overflow-hidden rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-900" style="aspect-ratio: 1/1;"></div>
-                                        <p class="mt-2 text-xs text-gray-400 animate-pulse">Dekatkan stiker QR Code alat ke arah kamera lab.</p>
-                                    </div>
-
-                                    <div x-show="scanned" class="p-4 bg-emerald-500/10 text-emerald-500 rounded-lg w-full flex flex-col items-center justify-center gap-1" style="display: none;">
-                                        <span class="text-2xl">✅</span>
-                                        <p class="text-xs font-semibold">Scan Berhasil Divalidasi!</p>
-                                        <p class="text-xs font-mono bg-white dark:bg-gray-900 px-2 py-0.5 rounded shadow-sm border border-gray-200 dark:border-gray-800 mt-1" x-text="scannedCode"></p>
-                                        <button type="button" @click="startCamera()" class="mt-2 text-xs text-primary-500 underline hover:text-primary-600">Scan Ulang Barang</button>
-                                    </div>
-                                </div>
-                            ')),
-
-                        Forms\Components\TextInput::make('nomor_seri_atau_qr')
-                            ->label('Kode QR / Nomor Seri Alat')
-                            ->id('qr-table-return-field')
+                    ->visible(fn ($record): bool => $record->status === 'aktif')
+                    ->modalHeading('Kembalikan Alat')
+                    ->modalDescription(new HtmlString('
+                        <div x-data="latekajeScanner(\'reader-table-return\', \'qr-table-return-field\')" x-init="init()" class="mb-3">
+                            <div id="reader-table-return" style="min-height:240px" class="w-full overflow-hidden rounded-lg border border-dashed border-gray-300 bg-black"></div>
+                            <p class="mt-2 text-sm text-gray-500" x-text="status"></p>
+                            <p class="mt-1 text-sm text-red-600" x-show="error" x-text="error"></p>
+                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                                <select x-show="cameras.length > 1" x-model="cameraId" @change="restart()" class="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
+                                    <template x-for="c in cameras" :key="c.id"><option :value="c.id" x-text="c.label || c.id"></option></template>
+                                </select>
+                                <button type="button" @click="restart()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Scan Ulang</button>
+                                <button type="button" @click="stop()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Matikan Kamera</button>
+                            </div>
+                        </div>
+                    '))
+                    ->schema([
+                        TextInput::make('nomor_seri_atau_qr')
+                            ->label('Scan / Ketik Kode QR Alat')
                             ->required()
-                            ->placeholder('Otomatis terisi via scan di atas atau ketik manual...'),
+                            ->extraAttributes(['id' => 'qr-table-return-field']),
 
-                        Forms\Components\TextInput::make('nama_siswa_input')
-                            ->label('Nama Lengkap Peminjam (Verifikasi)')
+                        TextInput::make('pin')
+                            ->label('PIN Pengembalian (6 digit)')
                             ->required()
-                            ->placeholder('Ketik nama Anda sesuai saat meminjam...'),
+                            ->length(6)
+                            ->placeholder('Diberikan saat meminjam'),
 
-                        Forms\Components\Select::make('kelas_input')
-                            ->label('Kelas / Jabatan (Verifikasi)')
+                        TextInput::make('returned_by')
+                            ->label('Nama Pengembali (yang bawa alat)')
+                            ->required()
+                            ->placeholder('cth: Budi Santoso'),
+
+                        Select::make('return_relation')
+                            ->label('Status Pengembali')
                             ->options([
-                                'X TJKT 1' => 'X TJKT 1',
-                                'X TJKT 2' => 'X TJKT 2',
-                                'XI TJKT 1' => 'XI TJKT 1',
-                                'XI TJKT 2' => 'XI TJKT 2',
-                                'XII TJKT 1' => 'XII TJKT 1',
-                                'XII TJKT 2' => 'XII TJKT 2',
-                                'GURU / STAF' => '💼 Guru / Staf Instruktur',
+                                'sendiri' => 'Peminjam sendiri',
+                                'wakil' => 'Di Wakilkan teman',
                             ])
-                            ->required()
-                            ->searchable()
-                            ->placeholder('Pilih kelas Anda...'),
+                            ->default('sendiri')
+                            ->required(),
+
+                        TextInput::make('received_by')
+                            ->label('Diterima Oleh Petugas (opsional)')
+                            ->placeholder('Kosongkan bila mandiri / tanpa petugas'),
+
+                        FileUpload::make('return_photo_path')
+                            ->label('Foto Bukti (opsional)')
+                            ->image()
+                            ->disk('public')
+                            ->directory('returns')
+                            ->maxSize(2048),
                     ])
-                    
-                    ->action(function ($record, array $data) {
-                        $actualQr = $record->assetItem?->nomor_seri_atau_qr;
-
-                        if (!$actualQr || $actualQr !== $data['nomor_seri_atau_qr']) {
+                    ->action(function ($record, array $data): void {
+                        try {
+                            LoanService::returnLoan($record, [
+                                'qr' => (string) ($data['nomor_seri_atau_qr'] ?? ''),
+                                'pin' => (string) ($data['pin'] ?? ''),
+                                'returned_by' => (string) ($data['returned_by'] ?? ''),
+                                'return_relation' => (string) ($data['return_relation'] ?? 'sendiri'),
+                                'received_by' => (string) ($data['received_by'] ?? ''),
+                                'return_photo_path' => $data['return_photo_path'] ?? null,
+                            ]);
+                        } catch (ValidationException $e) {
                             Notification::make()
-                                ->title('Verifikasi Gagal ❌')
-                                ->body('Kode QR tidak cocok! Alat fisik yang Anda bawa bukan unit yang terdaftar di log pinjaman ini.')
+                                ->title('Gagal mengembalikan')
+                                ->body(collect($e->errors())->flatten()->implode(' '))
                                 ->danger()
                                 ->persistent()
                                 ->send();
-                            return;
+
+                            throw $e;
                         }
-
-                        $inputName  = strtolower(trim($data['nama_siswa_input']));
-                        $dbName     = strtolower(trim($record->nama_siswa));
-                        $inputClass = strtolower(trim($data['kelas_input']));
-                        $dbClass    = strtolower(trim($record->kelas));
-
-                        if ($inputName !== $dbName || $inputClass !== $dbClass) {
-                            Notification::make()
-                                ->title('Verifikasi Gagal ❌')
-                                ->body('Nama atau Kelas tidak cocok dengan data peminjam asli dari unit ini!')
-                                ->danger()
-                                ->persistent()
-                                ->send();
-                            return;
-                        }
-
-                        $record->update([
-                            'status' => 'kembali',
-                            'tanggal_kembali' => now(),
-                        ]);
-
-                        $record->assetItem?->update([
-                            'status' => 'tersedia',
-                        ]);
 
                         Notification::make()
-                            ->title('Pengembalian Berhasil! 🎉')
-                            ->body("Terima kasih **{$record->nama_siswa}**, unit alat telah aman dikembalikan ke dalam lab.")
+                            ->title('Alat dikembalikan')
+                            ->body('Peminjaman '.$record->nama_siswa.' telah ditutup.')
                             ->success()
                             ->send();
                     }),

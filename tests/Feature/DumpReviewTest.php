@@ -9,7 +9,7 @@ class DumpReviewTest extends TestCase
 {
     public function test_dump(): void
     {
-        $email = env('REVIEW_USER_EMAIL', 'admin@latekaje.net');
+        $email = env('REVIEW_USER_EMAIL', 'admin@gmail.com');
         $u = User::where('email', $email)->first();
 
         if (! $u) {

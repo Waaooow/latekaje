@@ -10,7 +10,7 @@ class LoanActivityChart extends ChartWidget
 {
     protected ?string $heading = 'Aktivitas Peminjaman (6 Bulan Terakhir)';
 
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     protected int | string | array $columnSpan = 'full';
 

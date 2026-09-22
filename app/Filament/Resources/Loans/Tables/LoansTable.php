@@ -95,6 +95,7 @@ class LoansTable
             ->headerActions([
                 ExportAction::make()
                     ->exporter(LoanExporter::class)
+                    ->visible(fn (): bool => in_array(auth()->user()?->role, ['superadmin', 'toolman', 'anak_pkl'], true))
                     ->formats([ExportFormat::Xlsx, ExportFormat::Csv])
                     ->label('Export Rekap')
                     ->icon('heroicon-o-arrow-down-tray')

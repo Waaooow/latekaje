@@ -124,6 +124,7 @@ class NotificationSettings extends Page
         return [
             'logs' => RecapLog::latest()->limit(10)->get(),
             'unreturnedCount' => \App\Models\Loan::where('status', 'aktif')->count(),
+            'scheduleTime' => \App\Models\Setting::get('recap_time', '16:00'),
         ];
     }
 }

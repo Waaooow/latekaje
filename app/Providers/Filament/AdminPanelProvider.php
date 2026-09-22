@@ -201,6 +201,10 @@ class AdminPanelProvider extends PanelProvider
                     HTML,
             )
             ->renderHook(
+                PanelsRenderHook::BODY_END,
+                static fn () => view('ws-listener'),
+            )
+            ->renderHook(
                 PanelsRenderHook::FOOTER,
                 fn (): string => Blade::render('<div class="text-center text-xs text-gray-500 py-4">LATEKAJE © {{ date("Y") }}, Crafted by Alfin</div>'),
             );

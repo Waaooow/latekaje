@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\LoanActivityEvent;
 use App\Models\AssetItem;
 use App\Models\Loan;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,7 @@ class LoanService
             ]);
         }
 
-        return DB::transaction(function () use ($itemId, $nama, $kelas, $pin) {
+        [$loan, $itemCode] = DB::transaction(function () use ($itemId, $nama, $kelas, $pin) {
             /** @var AssetItem $item */
             $item = AssetItem::lockForUpdate()->findOrFail($itemId);
 
@@ -50,8 +51,12 @@ class LoanService
 
             $item->update(['status' => 'dipinjam']);
 
-            return $loan;
+            return [$loan, $item->nomor_seri_atau_qr];
         });
+
+        broadcast(new LoanActivityEvent('borrow', $loan->id, $itemCode, $nama, $kelas))->toOthers();
+
+        return $loan;
     }
 
     /**
@@ -62,7 +67,7 @@ class LoanService
      */
     public static function returnLoan(Loan $loan, array $payload): void
     {
-        DB::transaction(function () use ($loan, $payload) {
+        $info = DB::transaction(function () use ($loan, $payload) {
             /** @var Loan $lockedLoan */
             $lockedLoan = Loan::lockForUpdate()->findOrFail($loan->id);
 
@@ -117,7 +122,24 @@ class LoanService
             ]);
 
             $item->update(['status' => 'tersedia']);
+
+            return [
+                'loan_id' => $lockedLoan->id,
+                'item_code' => $item->nomor_seri_atau_qr,
+                'borrower' => $lockedLoan->nama_siswa,
+                'kelas' => $lockedLoan->kelas,
+                'by' => $returnedBy,
+            ];
         });
+
+        broadcast(new LoanActivityEvent(
+            'return',
+            $info['loan_id'],
+            $info['item_code'],
+            $info['borrower'],
+            $info['kelas'],
+            $info['by'],
+        ))->toOthers();
     }
 
     private static function newPin(): string

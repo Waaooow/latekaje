@@ -30,10 +30,10 @@ class LoanActivityChart extends ChartWidget
         }
 
         $rows = Loan::query()
-            ->selectRaw("DATE_FORMAT(tanggal_pinjam, '%Y-%m') AS ym, COUNT(*) AS c")
             ->where('tanggal_pinjam', '>=', Carbon::now()->subMonths(5)->startOfMonth())
-            ->groupBy('ym')
-            ->pluck('c', 'ym')
+            ->pluck('tanggal_pinjam')
+            ->map(fn ($tgl) => Carbon::parse($tgl)->format('Y-m'))
+            ->countBy()
             ->all();
 
         foreach ($months as $key => $v) {

@@ -15,12 +15,12 @@
 
                 <div class="grid items-end gap-x-6 gap-y-6 md:grid-cols-2">
                     <label class="flex cursor-pointer items-center gap-3 text-sm">
-                        <x-filament::input.checkbox wire:model="form.recap_enabled" />
+                        <input type="checkbox" wire:model="form.recap_enabled" class="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500" />
                         <span>Kirim otomatis tiap hari</span>
                     </label>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium">Jam kirim (WIB)</label>
-                        <x-filament::input type="time" wire:model="form.recap_time" class="w-full" />
+                        <input  type="time" wire:model="form.recap_time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                 </div>
             </x-filament::section>
@@ -31,24 +31,24 @@
 
                 <div class="grid items-end gap-x-6 gap-y-6 md:grid-cols-2">
                     <label class="flex cursor-pointer items-center gap-3 text-sm md:col-span-2">
-                        <x-filament::input.checkbox wire:model="form.gowa_enabled" />
+                        <input type="checkbox" wire:model="form.gowa_enabled" class="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500" />
                         <span>Aktifkan kirim via GOWA</span>
                     </label>
                     <div class="md:col-span-2">
                         <label class="mb-1.5 block text-sm font-medium">Base URL GOWA</label>
-                        <x-filament::input wire:model="form.gowa_base_url" placeholder="http://127.0.0.1:3000" class="w-full font-mono" />
+                        <input wire:model="form.gowa_base_url" placeholder="http://127.0.0.1:3000" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium">Basic Auth User <span class="font-normal text-gray-400">(opsional)</span></label>
-                        <x-filament::input wire:model="form.gowa_user" class="w-full" />
+                        <input  wire:model="form.gowa_user" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium">Basic Auth Password <span class="font-normal text-gray-400">(opsional)</span></label>
-                        <x-filament::input type="password" wire:model="form.gowa_pass" class="w-full" />
+                        <input  type="password" wire:model="form.gowa_pass" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                     <div class="md:col-span-2">
                         <label class="mb-1.5 block text-sm font-medium">Target (nomor 628.. / JID grup ....@g.us)</label>
-                        <x-filament::input wire:model="form.gowa_target" placeholder="6281234567890" class="w-full font-mono" />
+                        <input  wire:model="form.gowa_target" placeholder="6281234567890" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                 </div>
                 <div class="mt-6 flex flex-wrap items-center gap-3">
@@ -65,16 +65,16 @@
 
                 <div class="grid items-end gap-x-6 gap-y-6 md:grid-cols-2">
                     <label class="flex cursor-pointer items-center gap-3 text-sm md:col-span-2">
-                        <x-filament::input.checkbox wire:model="form.webhook_enabled" />
+                        <input type="checkbox" wire:model="form.webhook_enabled" class="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500" />
                         <span>Aktifkan webhook</span>
                     </label>
                     <div class="md:col-span-2">
                         <label class="mb-1.5 block text-sm font-medium">Webhook URL</label>
-                        <x-filament::input wire:model="form.webhook_url" placeholder="https://..." class="w-full font-mono" />
+                        <input wire:model="form.webhook_url" placeholder="https://..." class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                     <div class="md:col-span-2">
                         <label class="mb-1.5 block text-sm font-medium">Secret <span class="font-normal text-gray-400">(header X-Webhook-Secret, opsional)</span></label>
-                        <x-filament::input wire:model="form.webhook_secret" class="w-full font-mono" />
+                        <input  wire:model="form.webhook_secret" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                 </div>
                 <div class="mt-6 flex flex-wrap items-center gap-3">

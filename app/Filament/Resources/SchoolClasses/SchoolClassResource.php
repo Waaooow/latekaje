@@ -20,6 +20,12 @@ class SchoolClassResource extends Resource
 {
     protected static ?string $model = SchoolClass::class;
 
+    protected static ?string $modelLabel = 'Kelas';
+
+    protected static ?string $pluralModelLabel = 'Kelas';
+
+    protected static ?string $recordTitleAttribute = 'label';
+
     protected static ?string $navigationLabel = 'Kelas';
 
     protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedAcademicCap;
@@ -67,8 +73,10 @@ class SchoolClassResource extends Resource
                     ->sortable(),
             ])
             ->actions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->label('Ubah'),
+                DeleteAction::make()
+                    ->label('Hapus'),
             ]);
     }
 

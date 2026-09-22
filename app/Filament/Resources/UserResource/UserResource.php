@@ -26,9 +26,9 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'Kelola User';
 
-    protected static ?string $modelLabel = 'User';
+    protected static ?string $modelLabel = 'Pengguna';
 
-    protected static ?string $pluralModelLabel = 'User';
+    protected static ?string $pluralModelLabel = 'Pengguna';
 
     public static function form(Schema $schema): Schema
     {
@@ -104,12 +104,15 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->label('Ubah'),
+                DeleteAction::make()
+                    ->label('Hapus'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                    ->label('Hapus'),
                 ]),
             ]);
     }

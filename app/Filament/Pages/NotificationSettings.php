@@ -17,6 +17,8 @@ class NotificationSettings extends Page
 
     protected static ?string $navigationLabel = 'Notifikasi';
 
+    protected static ?string $title = 'Notifikasi';
+
     protected static ?int $navigationSort = 7;
 
     protected string $view = 'filament.pages.notification-settings';

@@ -77,6 +77,7 @@ class AssetItemsTable
             ])
             ->headerActions([
                 ImportAction::make()
+                    ->label('Import')
                     ->importer(AssetItemImporter::class),
                 Action::make('downloadTemplateCsv')
                     ->label('Template CSV')
@@ -109,6 +110,7 @@ class AssetItemsTable
                         }, 'template-import-unit.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
                     }),
                 ExportAction::make()
+                    ->label('Unduh Excel')
                     ->exporter(AssetItemExporter::class),
                 Action::make('printAllQr')
                     ->label('Cetak Semua QR')
@@ -117,8 +119,10 @@ class AssetItemsTable
                     ->openUrlInNewTab(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->label('Ubah'),
+                DeleteAction::make()
+                    ->label('Hapus'),
                 Action::make('printQr')
                     ->label('Cetak QR')
                     ->icon('heroicon-o-qr-code')
@@ -127,7 +131,8 @@ class AssetItemsTable
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                    ->label('Hapus'),
                     BulkAction::make('printBulkQr')
                         ->label('Cetak QR Terpilih')
                         ->icon('heroicon-o-qr-code')

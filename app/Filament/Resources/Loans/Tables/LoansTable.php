@@ -82,6 +82,7 @@ class LoansTable
                         'kembali' => 'Kembali',
                     ])
                     ->default('aktif')
+                    ->placeholder('Semua')
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;
 

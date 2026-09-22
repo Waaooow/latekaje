@@ -22,7 +22,11 @@ class AssetItemResource extends Resource
 
     protected static ?string $navigationLabel = 'Data Unit/QR';
 
-    protected static ?string $modelLabel = 'Data Items';
+    protected static ?string $modelLabel = 'Data Unit';
+
+    protected static ?string $pluralModelLabel = 'Data Unit';
+
+    protected static ?string $recordTitleAttribute = 'nomor_seri_atau_qr';
 
     public static function form(Schema $schema): Schema
     {

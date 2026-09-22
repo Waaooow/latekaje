@@ -22,6 +22,12 @@ class LocationResource extends Resource
 {
     protected static ?string $model = Location::class;
 
+    protected static ?string $modelLabel = 'Lokasi';
+
+    protected static ?string $pluralModelLabel = 'Lokasi';
+
+    protected static ?string $recordTitleAttribute = 'label';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
     protected static ?string $navigationLabel = 'Lokasi';
@@ -65,12 +71,15 @@ class LocationResource extends Resource
                     ->sortable(),
             ])
             ->actions([
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->label('Ubah'),
+                DeleteAction::make()
+                    ->label('Hapus'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                    ->label('Hapus'),
                 ]),
             ]);
     }

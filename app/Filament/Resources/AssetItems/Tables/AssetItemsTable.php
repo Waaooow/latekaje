@@ -5,6 +5,7 @@ namespace App\Filament\Resources\AssetItems\Tables;
 use App\Filament\Exports\AssetItemExporter;
 use App\Filament\Imports\AssetItemImporter;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -77,6 +78,7 @@ class AssetItemsTable
             ])
             ->headerActions([
                 ImportAction::make()
+                    ->label('Import')
                     ->importer(AssetItemImporter::class),
                 Action::make('downloadTemplateCsv')
                     ->label('Template CSV')
@@ -109,6 +111,7 @@ class AssetItemsTable
                         }, 'template-import-unit.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
                     }),
                 ExportAction::make()
+                    ->label('Unduh Excel')
                     ->exporter(AssetItemExporter::class),
                 Action::make('printAllQr')
                     ->label('Cetak Semua QR')
@@ -117,17 +120,24 @@ class AssetItemsTable
                     ->openUrlInNewTab(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
-                Action::make('printQr')
-                    ->label('Cetak QR')
-                    ->icon('heroicon-o-qr-code')
-                    ->url(fn ($record): string => route('print.qr', ['ids' => $record->getKey()]))
-                    ->openUrlInNewTab(),
+                ActionGroup::make([
+                    EditAction::make()
+                        ->label('Ubah'),
+                    DeleteAction::make()
+                        ->label('Hapus'),
+                    Action::make('printQr')
+                        ->label('Cetak QR')
+                        ->icon('heroicon-o-qr-code')
+                        ->url(fn ($record): string => route('print.qr', ['ids' => $record->getKey()]))
+                        ->openUrlInNewTab(),
+                ])
+                    ->label('Aksi')
+                    ->icon('heroicon-m-ellipsis-horizontal'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                    ->label('Hapus'),
                     BulkAction::make('printBulkQr')
                         ->label('Cetak QR Terpilih')
                         ->icon('heroicon-o-qr-code')

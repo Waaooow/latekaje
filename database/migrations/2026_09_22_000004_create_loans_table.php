@@ -10,13 +10,13 @@ return new class extends Migration
     {
         Schema::create('loans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('asset_item_id')->constrained('asset_items')->restrictOnDelete();
+            $table->foreignId('asset_item_id')->nullable()->constrained('asset_items')->restrictOnDelete();
             $table->string('nama_siswa');
             $table->string('kelas');
             $table->timestamp('tanggal_pinjam')->useCurrent();
             $table->timestamp('tanggal_kembali')->nullable();
             $table->enum('status', ['aktif', 'kembali'])->default('aktif');
-            $table->unsignedBigInteger('active_item_id')->nullable()->storedAs("IF(status = 'aktif', asset_item_id, NULL)")->unique();
+            $table->unsignedBigInteger('active_item_id')->nullable()->storedAs('CASE WHEN status = \'aktif\' THEN asset_item_id ELSE NULL END')->unique();
             $table->timestamps();
         });
     }

@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\Loans\Tables;
 
+use App\Filament\Exports\LoanExporter;
 use App\Services\LoanService;
 use Filament\Actions\Action;
+use Filament\Actions\ExportAction;
+use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -79,6 +82,7 @@ class LoansTable
                         'kembali' => 'Kembali',
                     ])
                     ->default('aktif')
+                    ->placeholder('Semua')
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;
 
@@ -89,6 +93,15 @@ class LoansTable
                         return $query->where('status', $value);
                     }),
             ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exporter(LoanExporter::class)
+                    ->visible(fn (): bool => in_array(auth()->user()?->role, ['superadmin', 'toolman', 'anak_pkl'], true))
+                    ->formats([ExportFormat::Xlsx, ExportFormat::Csv])
+                    ->label('Export Rekap')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+            ])
             ->recordActions([
                 Action::make('kembalikan')
                     ->label('Kembalikan')
@@ -97,23 +110,27 @@ class LoansTable
                     ->visible(fn ($record): bool => $record->status === 'aktif')
                     ->modalHeading('Kembalikan Alat')
                     ->modalDescription(new HtmlString('
-                        <div x-data="latekajeScanner(\'reader-table-return\', \'qr-table-return-field\')" x-init="init()" class="mb-3">
-                            <div id="reader-table-return" style="min-height:240px" class="w-full overflow-hidden rounded-lg border border-dashed border-gray-300 bg-black"></div>
-                            <p class="mt-2 text-sm text-gray-500" x-text="status"></p>
-                            <p class="mt-1 text-sm text-red-600" x-show="error" x-text="error"></p>
-                            <div class="mt-2 flex flex-wrap items-center gap-2">
-                                <select x-show="cameras.length > 1" x-model="cameraId" @change="restart()" class="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
+                        <div x-data="latekajeScanner(\'reader-table-return\', \'qr-table-return-field\')" x-init="init()" style="margin-bottom: 0.75rem;">
+                            <div id="reader-table-return" class="lk-reader"></div>
+                            <p class="lk-status" x-text="status"></p>
+                            <p class="lk-error" x-show="error" x-text="error"></p>
+                            <div class="lk-row" x-show="cameras.length > 1" style="grid-template-columns: 1fr;">
+                                <select x-model="cameraId" @change="restart()" class="lk-select">
                                     <template x-for="c in cameras" :key="c.id"><option :value="c.id" x-text="c.label || c.id"></option></template>
                                 </select>
-                                <button type="button" @click="restart()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Scan Ulang</button>
-                                <button type="button" @click="stop()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Matikan Kamera</button>
                             </div>
+                            <div class="lk-row">
+                                <button type="button" @click="restart()" class="lk-btn lk-btn-primary">Scan Ulang</button>
+                                <button type="button" @click="stop()" class="lk-btn">Matikan Kamera</button>
+                            </div>
+                            <p class="lk-hint">Hasil scan mengisi kolom Kode QR di bawah — modal tetap terbuka, isi form lalu tekan Konfirmasi.</p>
                         </div>
                     '))
                     ->schema([
                         TextInput::make('nomor_seri_atau_qr')
                             ->label('Scan / Ketik Kode QR Alat')
                             ->required()
+                            ->live()
                             ->extraAttributes(['id' => 'qr-table-return-field']),
 
                         TextInput::make('pin')

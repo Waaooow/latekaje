@@ -1,0 +1,94 @@
+/* LATEKAJE custom UI (tanpa build step, langsung diload) */
+
+/* 1. Tombol aksi rata kanan (ramah jempol) */
+.fi-header-actions-ctn {
+    display: flex;
+    justify-content: flex-end;
+}
+.fi-ta-actions.fi-align-start {
+    justify-content: flex-end;
+}
+
+/* 2. Scanner QR */
+.lk-reader {
+    min-height: 240px;
+    aspect-ratio: 4 / 3;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    border: 1px dashed #d1d5db;
+    background: #000;
+}
+.lk-reader video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.lk-status { margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280; }
+.lk-error { margin-top: 0.25rem; font-size: 0.875rem; color: #dc2626; }
+.lk-row { margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.lk-select {
+    width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem;
+    padding: 0.5rem; font-size: 0.875rem; background: #fff; color: #111;
+}
+.lk-btn {
+    border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem 0.75rem;
+    font-size: 0.875rem; background: #fff; color: #111; cursor: pointer;
+}
+.lk-btn-primary { background: #f59e0b; border-color: #f59e0b; color: #fff; font-weight: 600; }
+.lk-hint { margin-top: 0.5rem; font-size: 0.75rem; color: #9ca3af; }
+
+/* 3. Halaman Notifikasi */
+.lk-wrap { max-width: 48rem; margin: 0 auto; display: flex; flex-direction: column; gap: 2rem; }
+.lk-grid { display: grid; gap: 1.5rem; }
+@media (min-width: 768px) {
+    .lk-grid-2 { grid-template-columns: 1fr 1fr; }
+}
+.lk-span { grid-column: 1 / -1; }
+.lk-field label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.375rem; }
+.lk-field .lk-opt { font-weight: 400; color: #9ca3af; }
+.lk-input {
+    width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; background: #fff;
+    padding: 0.5rem 0.75rem; font-size: 0.875rem; color: #111;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.lk-input:focus { border-color: #f59e0b; outline: none; box-shadow: 0 0 0 1px #f59e0b; }
+.lk-input::placeholder { color: #9ca3af; }
+.lk-check { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; cursor: pointer; }
+.lk-check input { width: 1rem; height: 1rem; accent-color: #f59e0b; }
+.lk-btnrow { margin-top: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.lk-note { font-size: 0.875rem; color: #6b7280; }
+.lk-tablewrap { overflow-x: auto; }
+.lk-table { width: 100%; font-size: 0.875rem; border-collapse: collapse; }
+.lk-table th { text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; padding: 0.5rem 0.75rem; }
+.lk-table td { padding: 0.75rem; border-top: 1px solid #f3f4f6; }
+.lk-mono { font-family: ui-monospace, monospace; font-size: 0.75rem; }
+.lk-empty { padding: 1rem 0.75rem; color: #9ca3af; }
+
+/* Dark mode (Filament pakai class .dark di <html>) */
+.dark .lk-select, .dark .lk-input { background: #1f2937; border-color: #4b5563; color: #f9fafb; }
+.dark .lk-btn { background: #1f2937; border-color: #4b5563; color: #e5e7eb; }
+.dark .lk-reader { border-color: #4b5563; }
+.dark .lk-status, .dark .lk-note { color: #9ca3af; }
+.dark .lk-table td { border-color: #374151; }
+
+/* 4. Footer menempel ke bawah viewport */
+.fi-main-ctn {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+}
+.lk-footer {
+    margin-top: auto;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+}
+.dark .lk-footer {
+    color: #9ca3af;
+    border-color: #1f2937;
+    background: #030712;
+}

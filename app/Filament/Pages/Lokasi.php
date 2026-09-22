@@ -17,6 +17,8 @@ class Lokasi extends Page implements HasTable
 
     protected static ?string $navigationLabel = 'Data per Lokasi';
 
+    protected static ?string $title = 'Data per Lokasi';
+
     protected static ?string $slug = 'data-per-lokasi';
 
     protected static ?int $navigationSort = 4;
@@ -38,7 +40,7 @@ class Lokasi extends Page implements HasTable
 
                 TextColumn::make('asset.nama_alat')
                     ->label('Alat')
-                    ->description(fn ($record): ?string => $record->asset?->kode)
+                    ->description(fn ($record): ?string => trim(($record->asset?->kode_aset ?? '').' · '.($record->asset?->spesifikasi ?? ''), ' ·'))
                     ->searchable()
                     ->sortable(),
 

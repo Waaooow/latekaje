@@ -25,6 +25,8 @@ class LoanResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Peminjaman';
 
+    protected static ?string $recordTitleAttribute = 'nama_siswa';
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery();

@@ -25,6 +25,23 @@ class Loan extends Model
         return $this->belongsTo(AssetItem::class);
     }
 
+    public function getNamaAlatAttribute(): string
+    {
+        return $this->assetItem?->asset?->nama_alat ?? '(unit dihapus)';
+    }
+
+    public function getLamaHariAttribute(): string
+    {
+        $end = $this->tanggal_kembali ?? now();
+        $days = $this->tanggal_pinjam ? (int) $end->diffInDays($this->tanggal_pinjam) : 0;
+
+        if ($this->status === 'aktif' && $days === 0) {
+            return 'hari ini';
+        }
+
+        return $days.' hari';
+    }
+
     protected static function booted(): void
     {
         static::created(function (Loan $loan): void {

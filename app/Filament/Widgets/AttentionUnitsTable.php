@@ -9,7 +9,7 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class AttentionUnitsTable extends BaseWidget
 {
-    protected static ?int $sort = 6;
+    protected static ?int $sort = 7;
 
     protected int | string | array $columnSpan = 1;
 

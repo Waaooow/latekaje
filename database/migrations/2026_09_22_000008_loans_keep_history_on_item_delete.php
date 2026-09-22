@@ -13,6 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Hanya untuk MySQL/MariaDB. SQLite memakai FK restrict bawaan 000004.
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         $prefix = (string) config('database.connections.mysql.prefix', '');
         $table = $prefix.'loans';
         $db = (string) DB::selectOne('SELECT DATABASE() AS d')->d;

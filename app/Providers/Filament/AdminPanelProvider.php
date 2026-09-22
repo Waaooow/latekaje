@@ -58,7 +58,11 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): string => <<<'HTML'
+                    <link rel="stylesheet" href="/css/latekaje.css?v=1" />
                     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+                    <style>
+                    #reader-loan-inline, #reader-table-return { background: #000; }
+                    </style>
                     <script>
                     window.latekajeQr = {
                         _pending: null,
@@ -86,7 +90,17 @@ class AdminPanelProvider extends PanelProvider
                             error: '',
                             locked: false,
                             observer: null,
+                            _gen: 0,
                             async init() {
+                                const gen = (++this._gen);
+                                const alive = () => gen === this._gen;
+                                try {
+                                    const prev = window.latekajeQr._active[readerId];
+                                    if (prev && prev !== this) { await prev.stopQuiet(); }
+                                } catch (e) {}
+                                window.latekajeQr._active[readerId] = this;
+                                const el = document.getElementById(readerId);
+                                if (el) el.innerHTML = '';
                                 if (!window.isSecureContext) {
                                     this.status = '';
                                     this.error = 'Akses kamera membutuhkan HTTPS. Buka aplikasi lewat alamat https://';
@@ -99,6 +113,7 @@ class AdminPanelProvider extends PanelProvider
                                     this.error = 'Library scanner gagal dimuat. Periksa koneksi internet lalu tekan Scan Ulang.';
                                     return;
                                 }
+                                if (!alive()) return;
                                 let cams = [];
                                 try {
                                     cams = await Html5Qrcode.getCameras();
@@ -107,6 +122,7 @@ class AdminPanelProvider extends PanelProvider
                                     this.error = 'Izin kamera ditolak atau tidak ada kamera. Izinkan akses kamera di browser (ikon kamera di address bar), lalu tekan Scan Ulang.';
                                     return;
                                 }
+                                if (!alive()) return;
                                 if (!cams || !cams.length) {
                                     this.status = '';
                                     this.error = 'Tidak ada kamera yang ditemukan di perangkat ini. Ketik kode manual.';
@@ -115,19 +131,16 @@ class AdminPanelProvider extends PanelProvider
                                 this.cameras = cams;
                                 const back = cams.find((c) => /back|rear|environment/i.test(c.label || ''));
                                 this.cameraId = (back || cams[0]).id;
-                                // Matikan instance lama pada elemen yang sama (anti preview ganda).
-                                const prev = window.latekajeQr._active[readerId];
-                                if (prev && prev !== this) { try { await prev.stopQuiet(); } catch (e) {} }
-                                window.latekajeQr._active[readerId] = this;
-                                const el = document.getElementById(readerId);
-                                if (el) el.innerHTML = '';
                                 this.watchRemoval();
                                 await this.start();
                             },
                             async start() {
+                                const gen = this._gen;
                                 this.error = '';
                                 this.locked = false;
                                 this.status = 'Membuka kamera…';
+                                const elw = document.getElementById(readerId);
+                                const box = Math.max(160, Math.min(250, (elw ? elw.clientWidth : 300) - 32));
                                 try {
                                     this.scanner = new Html5Qrcode(readerId);
                                 } catch (e) {
@@ -138,18 +151,20 @@ class AdminPanelProvider extends PanelProvider
                                 try {
                                     await this.scanner.start(
                                         this.cameraId,
-                                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                                        { fps: 10, qrbox: { width: box, height: box } },
                                         (txt) => this.onScan(txt),
                                         () => {}
                                     );
+                                    if (gen !== this._gen) { await this.stopQuiet(); return; }
                                     this.status = 'Arahkan QR alat ke kamera…';
                                 } catch (e) {
+                                    if (gen !== this._gen) return;
                                     this.status = '';
                                     this.error = 'Kamera tidak bisa dibuka (' + ((e && e.message) || e) + ').';
                                 }
                             },
                             async restart() { await this.stopQuiet(); await this.start(); },
-                            onScan(txt) {
+                            async onScan(txt) {
                                 if (this.locked) return;
                                 this.locked = true;
                                 const root = document.getElementById(inputId);
@@ -159,24 +174,24 @@ class AdminPanelProvider extends PanelProvider
                                     input.value = txt;
                                     input.dispatchEvent(new Event('input', { bubbles: true }));
                                     input.dispatchEvent(new Event('change', { bubbles: true }));
-                                    this.status = 'Terdeteksi: ' + txt + ' — mengisi form…';
-                                } else {
-                                    this.status = 'Terdeteksi: ' + txt + ' — form tidak ditemukan!';
                                 }
-                                this.stopQuiet().then(() => {
-                                    const btn = document.querySelector('.fi-modal-close-btn');
-                                    if (btn) setTimeout(() => btn.click(), 700);
-                                });
+                                await this.stopQuiet();
+                                this.status = input
+                                    ? 'Terdeteksi: ' + txt + ' — sudah mengisi form, silakan lanjutkan.'
+                                    : 'Terdeteksi: ' + txt + ' — form tidak ditemukan!';
                             },
                             async stop() { await this.stopQuiet(); this.status = 'Kamera dimatikan.'; },
                             async stopQuiet() {
                                 try { if (this.scanner) { await this.scanner.stop(); this.scanner.clear(); } } catch (e) {}
                                 this.scanner = null;
+                                if (window.latekajeQr._active[readerId] === this) delete window.latekajeQr._active[readerId];
                             },
                             watchRemoval() {
                                 const self = this;
+                                try { if (self.observer) self.observer.disconnect(); } catch (e) {}
                                 this.observer = new MutationObserver(function () {
                                     if (!document.getElementById(readerId)) {
+                                        self._gen++;
                                         self.stopQuiet();
                                         if (self.observer) self.observer.disconnect();
                                     }
@@ -189,8 +204,12 @@ class AdminPanelProvider extends PanelProvider
                     HTML,
             )
             ->renderHook(
+                PanelsRenderHook::BODY_END,
+                static fn () => view('ws-listener'),
+            )
+            ->renderHook(
                 PanelsRenderHook::FOOTER,
-                fn (): string => Blade::render('<div class="text-center text-xs text-gray-500 py-4">LATEKAJE © {{ date("Y") }}, Crafted by Alfin</div>'),
+                fn (): string => Blade::render('<div class="lk-footer">LATEKAJE © {{ date("Y") }}, Crafted by Alfin</div>'),
             );
     }
 }

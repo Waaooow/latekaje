@@ -18,6 +18,12 @@ class AssetResource extends Resource
 {
     protected static ?string $model = Asset::class;
 
+    protected static ?string $modelLabel = 'Aset';
+
+    protected static ?string $pluralModelLabel = 'Aset';
+
+    protected static ?string $recordTitleAttribute = 'nama_alat';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $navigationLabel = 'Aset';

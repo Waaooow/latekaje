@@ -10,7 +10,7 @@ class LoanActivityChart extends ChartWidget
 {
     protected ?string $heading = 'Aktivitas Peminjaman (6 Bulan Terakhir)';
 
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     protected int | string | array $columnSpan = 'full';
 
@@ -30,10 +30,10 @@ class LoanActivityChart extends ChartWidget
         }
 
         $rows = Loan::query()
-            ->selectRaw("DATE_FORMAT(tanggal_pinjam, '%Y-%m') AS ym, COUNT(*) AS c")
             ->where('tanggal_pinjam', '>=', Carbon::now()->subMonths(5)->startOfMonth())
-            ->groupBy('ym')
-            ->pluck('c', 'ym')
+            ->pluck('tanggal_pinjam')
+            ->map(fn ($tgl) => Carbon::parse($tgl)->format('Y-m'))
+            ->countBy()
             ->all();
 
         foreach ($months as $key => $v) {

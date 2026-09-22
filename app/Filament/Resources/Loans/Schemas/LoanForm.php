@@ -25,15 +25,17 @@ class LoanForm
                 ->hiddenLabel()
                 ->content(new HtmlString('
                     <div x-data="latekajeScanner(\'reader-loan-inline\', \'loan-qr-field\')" x-init="init()">
-                        <div id="reader-loan-inline" style="min-height:240px" class="w-full overflow-hidden rounded-lg border border-dashed border-gray-300 bg-black"></div>
+                        <div id="reader-loan-inline" style="min-height:240px;aspect-ratio:4/3;" class="w-full overflow-hidden rounded-lg border border-dashed border-gray-300"></div>
                         <p class="mt-2 text-sm text-gray-500" x-text="status"></p>
                         <p class="mt-1 text-sm text-red-600" x-show="error" x-text="error"></p>
-                        <div class="mt-2 flex flex-wrap items-center gap-2">
-                            <select x-show="cameras.length > 1" x-model="cameraId" @change="restart()" class="rounded-lg border border-gray-300 px-2 py-1.5 text-sm">
+                        <div class="mt-2" x-show="cameras.length > 1">
+                            <select x-model="cameraId" @change="restart()" class="w-full rounded-lg border border-gray-300 px-2 py-2 text-sm">
                                 <template x-for="c in cameras" :key="c.id"><option :value="c.id" x-text="c.label || c.id"></option></template>
                             </select>
-                            <button type="button" @click="restart()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Scan Ulang</button>
-                            <button type="button" @click="stop()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm">Matikan Kamera</button>
+                        </div>
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <button type="button" @click="restart()" class="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white">Scan Ulang</button>
+                            <button type="button" @click="stop()" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">Matikan Kamera</button>
                         </div>
                     </div>
                 ')),

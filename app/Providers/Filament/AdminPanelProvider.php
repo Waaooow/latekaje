@@ -138,6 +138,8 @@ class AdminPanelProvider extends PanelProvider
                                 this.error = '';
                                 this.locked = false;
                                 this.status = 'Membuka kamera…';
+                                const elw = document.getElementById(readerId);
+                                const box = Math.max(160, Math.min(250, (elw ? elw.clientWidth : 300) - 32));
                                 try {
                                     this.scanner = new Html5Qrcode(readerId);
                                 } catch (e) {
@@ -148,7 +150,7 @@ class AdminPanelProvider extends PanelProvider
                                 try {
                                     await this.scanner.start(
                                         this.cameraId,
-                                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                                        { fps: 10, qrbox: { width: box, height: box } },
                                         (txt) => this.onScan(txt),
                                         () => {}
                                     );

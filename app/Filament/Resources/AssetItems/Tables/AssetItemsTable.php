@@ -5,6 +5,7 @@ namespace App\Filament\Resources\AssetItems\Tables;
 use App\Filament\Exports\AssetItemExporter;
 use App\Filament\Imports\AssetItemImporter;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -119,15 +120,19 @@ class AssetItemsTable
                     ->openUrlInNewTab(),
             ])
             ->recordActions([
-                EditAction::make()
-                    ->label('Ubah'),
-                DeleteAction::make()
-                    ->label('Hapus'),
-                Action::make('printQr')
-                    ->label('Cetak QR')
-                    ->icon('heroicon-o-qr-code')
-                    ->url(fn ($record): string => route('print.qr', ['ids' => $record->getKey()]))
-                    ->openUrlInNewTab(),
+                ActionGroup::make([
+                    EditAction::make()
+                        ->label('Ubah'),
+                    DeleteAction::make()
+                        ->label('Hapus'),
+                    Action::make('printQr')
+                        ->label('Cetak QR')
+                        ->icon('heroicon-o-qr-code')
+                        ->url(fn ($record): string => route('print.qr', ['ids' => $record->getKey()]))
+                        ->openUrlInNewTab(),
+                ])
+                    ->label('Aksi')
+                    ->icon('heroicon-m-ellipsis-horizontal'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

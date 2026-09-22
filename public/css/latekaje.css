@@ -71,3 +71,24 @@
 .dark .lk-reader { border-color: #4b5563; }
 .dark .lk-status, .dark .lk-note { color: #9ca3af; }
 .dark .lk-table td { border-color: #374151; }
+
+/* 4. Footer menempel ke bawah viewport */
+.fi-main-ctn {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+}
+.lk-footer {
+    margin-top: auto;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+}
+.dark .lk-footer {
+    color: #9ca3af;
+    border-color: #1f2937;
+    background: #030712;
+}

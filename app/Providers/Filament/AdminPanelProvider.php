@@ -209,7 +209,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::FOOTER,
-                fn (): string => Blade::render('<div class="text-center text-xs text-gray-500 py-4">LATEKAJE © {{ date("Y") }}, Crafted by Alfin</div>'),
+                fn (): string => Blade::render('<div class="lk-footer">LATEKAJE © {{ date("Y") }}, Crafted by Alfin</div>'),
             );
     }
 }

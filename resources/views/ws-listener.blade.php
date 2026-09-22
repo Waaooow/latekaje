@@ -8,6 +8,7 @@
 
     function boot() {
         if (booted) return;
+        if (!KEY) return;
         if (!window.Pusher || !window.Echo) {
             setTimeout(boot, 500);
             return;

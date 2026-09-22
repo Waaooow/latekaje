@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="space-y-8">
+    <div class="mx-auto w-full max-w-3xl space-y-8">
         <x-filament::section>
             <x-slot name="heading">Rekap Harian Otomatis</x-slot>
             <x-slot name="description">Jadwal aktif: setiap hari pukul {{ $scheduleTime }} WIB. Saat ini ada {{ $unreturnedCount }} unit belum kembali.</x-slot>
@@ -20,7 +20,7 @@
                     </label>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium">Jam kirim (WIB)</label>
-                        <input  type="time" wire:model="form.recap_time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                        <input type="time" wire:model="form.recap_time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                 </div>
             </x-filament::section>
@@ -40,15 +40,15 @@
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium">Basic Auth User <span class="font-normal text-gray-400">(opsional)</span></label>
-                        <input  wire:model="form.gowa_user" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                        <input wire:model="form.gowa_user" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                     <div>
                         <label class="mb-1.5 block text-sm font-medium">Basic Auth Password <span class="font-normal text-gray-400">(opsional)</span></label>
-                        <input  type="password" wire:model="form.gowa_pass" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                        <input type="password" wire:model="form.gowa_pass" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                     <div class="md:col-span-2">
                         <label class="mb-1.5 block text-sm font-medium">Target (nomor 628.. / JID grup ....@g.us)</label>
-                        <input  wire:model="form.gowa_target" placeholder="6281234567890" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                        <input wire:model="form.gowa_target" placeholder="6281234567890" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                 </div>
                 <div class="mt-6 flex flex-wrap items-center gap-3">
@@ -72,9 +72,27 @@
                         <label class="mb-1.5 block text-sm font-medium">Webhook URL</label>
                         <input wire:model="form.webhook_url" placeholder="https://..." class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
-                    <div class="md:col-span-2">
-                        <label class="mb-1.5 block text-sm font-medium">Secret <span class="font-normal text-gray-400">(header X-Webhook-Secret, opsional)</span></label>
-                        <input  wire:model="form.webhook_secret" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium">Cara kirim secret</label>
+                        <select wire:model="form.webhook_auth" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+                            <option value="header">Header X-Webhook-Secret</option>
+                            <option value="bearer">Bearer token</option>
+                            <option value="basic">Basic auth (user + password)</option>
+                            <option value="query">Query param ?secret=</option>
+                            <option value="none">Tanpa secret</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium">Secret / Token</label>
+                        <input wire:model="form.webhook_secret" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium">Basic User <span class="font-normal text-gray-400">(bila mode basic)</span></label>
+                        <input wire:model="form.webhook_user" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-sm font-medium">Basic Password</label>
+                        <input type="password" wire:model="form.webhook_pass" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
                 </div>
                 <div class="mt-6 flex flex-wrap items-center gap-3">

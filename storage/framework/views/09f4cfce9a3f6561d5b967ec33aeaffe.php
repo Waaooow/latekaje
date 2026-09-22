@@ -1,0 +1,1 @@
+<div class="text-center text-xs text-gray-500 py-4">LATEKAJE © <?php echo e(date("Y")); ?>, Crafted by Alfin</div><?php /**PATH /home/alfin/latekaje-v3/storage/framework/views/042fe45fb97ae7a5a0bf0607b10643cd.blade.php ENDPATH**/ ?>

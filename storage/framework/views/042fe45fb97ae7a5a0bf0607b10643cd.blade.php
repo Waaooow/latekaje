@@ -1,0 +1,1 @@
+<div class="text-center text-xs text-gray-500 py-4">LATEKAJE © {{ date("Y") }}, Crafted by Alfin</div>

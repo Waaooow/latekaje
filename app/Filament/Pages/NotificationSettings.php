@@ -6,10 +6,10 @@ use App\Models\RecapLog;
 use App\Models\Setting;
 use App\Services\GowaClient;
 use App\Services\RecapService;
+use App\Services\WebhookClient;
 use BackedEnum;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\Http;
 
 class NotificationSettings extends Page
 {
@@ -48,7 +48,10 @@ class NotificationSettings extends Page
             'gowa_target' => Setting::get('gowa_target', ''),
             'webhook_enabled' => Setting::boolean('webhook_enabled', false),
             'webhook_url' => Setting::get('webhook_url', ''),
+            'webhook_auth' => Setting::get('webhook_auth', 'header'),
             'webhook_secret' => Setting::get('webhook_secret', ''),
+            'webhook_user' => Setting::get('webhook_user', ''),
+            'webhook_pass' => Setting::get('webhook_pass', ''),
         ];
     }
 
@@ -91,19 +94,10 @@ class NotificationSettings extends Page
             return;
         }
 
-        try {
-            $secret = (string) Setting::get('webhook_secret', '');
-            $req = Http::timeout(15)->acceptJson();
-            if ($secret !== '') {
-                $req = $req->withHeaders(['X-Webhook-Secret' => $secret]);
-            }
-            $res = $req->post($url, ['event' => 'recap.test', 'message' => 'Tes koneksi webhook LATEKAJE']);
-            $this->webhookTest = $res->successful()
-                ? 'Terkirim! (HTTP '.$res->status().')'
-                : 'Gagal (HTTP '.$res->status().'): '.mb_substr((string) $res->body(), 0, 150);
-        } catch (\Throwable $e) {
-            $this->webhookTest = 'Gagal: '.mb_substr($e->getMessage(), 0, 150);
-        }
+        $res = WebhookClient::post($url, ['event' => 'recap.test', 'message' => 'Tes koneksi webhook LATEKAJE']);
+        $this->webhookTest = $res['ok']
+            ? 'Terkirim! (HTTP '.$res['status'].')'
+            : 'Gagal (HTTP '.$res['status'].'): '.$res['body'];
     }
 
     public function sendNow(): void

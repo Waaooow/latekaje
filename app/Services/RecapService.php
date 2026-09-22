@@ -6,7 +6,6 @@ use App\Models\Loan;
 use App\Models\RecapLog;
 use App\Models\Setting;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
 
 class RecapService
 {
@@ -79,37 +78,20 @@ class RecapService
 
         if (Setting::boolean('webhook_enabled') && Setting::get('webhook_url')) {
             $url = (string) Setting::get('webhook_url');
-            $secret = (string) Setting::get('webhook_secret', '');
-
-            try {
-                $req = Http::timeout(15)->acceptJson();
-                if ($secret !== '') {
-                    $req = $req->withHeaders(['X-Webhook-Secret' => $secret]);
-                }
-                $res = $req->post($url, [
-                    'event' => 'recap.unreturned',
-                    'generated_at' => Carbon::now()->toDateTimeString(),
-                    'total' => count($items),
-                    'items' => $items,
-                ]);
-                RecapLog::create([
-                    'channel' => 'webhook',
-                    'target' => $url,
-                    'total' => count($items),
-                    'status' => $res->successful() ? 'ok' : 'fail',
-                    'response' => $res->status().': '.mb_substr((string) $res->body(), 0, 300),
-                ]);
-                $out['webhook'] = $res->successful() ? 'terkirim' : 'gagal ('.$res->status().')';
-            } catch (\Throwable $e) {
-                RecapLog::create([
-                    'channel' => 'webhook',
-                    'target' => $url,
-                    'total' => count($items),
-                    'status' => 'fail',
-                    'response' => mb_substr($e->getMessage(), 0, 300),
-                ]);
-                $out['webhook'] = 'gagal ('.mb_substr($e->getMessage(), 0, 100).')';
-            }
+            $res = WebhookClient::post($url, [
+                'event' => 'recap.unreturned',
+                'generated_at' => Carbon::now()->toDateTimeString(),
+                'total' => count($items),
+                'items' => $items,
+            ]);
+            RecapLog::create([
+                'channel' => 'webhook',
+                'target' => $url,
+                'total' => count($items),
+                'status' => $res['ok'] ? 'ok' : 'fail',
+                'response' => $res['status'].': '.$res['body'],
+            ]);
+            $out['webhook'] = $res['ok'] ? 'terkirim' : 'gagal ('.$res['status'].': '.$res['body'].')';
         }
 
         if ($out === []) {

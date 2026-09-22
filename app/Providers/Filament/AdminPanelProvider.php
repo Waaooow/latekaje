@@ -58,6 +58,7 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): string => <<<'HTML'
+                    <link rel="stylesheet" href="/css/latekaje.css?v=1" />
                     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
                     <style>
                     #reader-loan-inline, #reader-table-return { background: #000; }

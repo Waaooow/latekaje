@@ -38,3 +38,6 @@ tls-*.log
 
 # script operasional staging (port lokal, hanya di server)
 run-*.sh
+
+# hasil compile blade (dibuat ulang otomatis)
+/storage/framework/views/*.php

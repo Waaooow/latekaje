@@ -13,7 +13,7 @@ class LoanService
     /**
      * @throws ValidationException
      */
-    public static function borrow(int $itemId, string $nama, string $kelas, ?string $pin = null): Loan
+    public static function borrow(int $itemId, string $nama, string $kelas, ?string $pin = null, ?int $studentId = null, ?string $nis = null): Loan
     {
         $pin = trim((string) $pin);
 
@@ -25,7 +25,7 @@ class LoanService
             ]);
         }
 
-        [$loan, $itemCode] = DB::transaction(function () use ($itemId, $nama, $kelas, $pin) {
+        [$loan, $itemCode] = DB::transaction(function () use ($itemId, $nama, $kelas, $pin, $studentId, $nis) {
             /** @var AssetItem $item */
             $item = AssetItem::lockForUpdate()->findOrFail($itemId);
 
@@ -47,6 +47,8 @@ class LoanService
                 'kelas' => $kelas,
                 'status' => 'aktif',
                 'return_pin' => $pin,
+                'student_id' => $studentId,
+                'nis' => $nis,
             ]);
 
             $item->update(['status' => 'dipinjam']);

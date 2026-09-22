@@ -29,7 +29,23 @@ class LoanResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery();
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        // Siswa pribadi hanya melihat pinjamannya sendiri.
+        // Akun kiosk generik (tanpa NIS) tetap melihat semua.
+        if ($user?->isSiswa() && ($user->nis || $user->student_id)) {
+            $query->where(function (Builder $w) use ($user) {
+                if ($user->nis) {
+                    $w->orWhere('nis', $user->nis);
+                }
+                if ($user->student_id) {
+                    $w->orWhere('student_id', $user->student_id);
+                }
+            });
+        }
+
+        return $query;
     }
 
     public static function form(Schema $schema): Schema

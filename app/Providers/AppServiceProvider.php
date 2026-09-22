@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Auth\NisUserProvider;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL; // 🟢 Wajib import class URL ini di atas!
 
@@ -9,6 +11,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        Auth::provider('nis-eloquent', fn ($app, array $config) => new NisUserProvider($app['hash'], $config['model']));
         $this->app->bind(
             \Filament\Auth\Http\Responses\Contracts\LoginResponse::class,
             \App\Http\Responses\LoginResponse::class,

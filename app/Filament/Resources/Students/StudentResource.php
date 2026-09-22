@@ -6,10 +6,13 @@ use App\Filament\Resources\Students\Pages\CreateStudent;
 use App\Filament\Resources\Students\Pages\EditStudent;
 use App\Filament\Resources\Students\Pages\ListStudents;
 use App\Models\Student;
+use App\Models\User;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -88,6 +91,29 @@ class StudentResource extends Resource
                     ->sortable(),
             ])
             ->actions([
+                Action::make('buatAkun')
+                    ->label('Buat Akun')
+                    ->icon('heroicon-o-key')
+                    ->color('info')
+                    ->visible(fn ($record): bool => filled($record->nis) && ! User::where('nis', $record->nis)->where('role', 'siswa')->exists())
+                    ->action(function ($record): void {
+                        $user = User::updateOrCreate(
+                            ['nis' => $record->nis, 'role' => 'siswa'],
+                            [
+                                'name' => $record->nama,
+                                'email' => $record->nis.'@siswa.latekaje',
+                                'password' => $record->nis,
+                                'student_id' => $record->id,
+                            ]
+                        );
+
+                        Notification::make()
+                            ->title('Akun login dibuat')
+                            ->body('NIS: '.$user->nis.' | Password awal: NIS-nya. Minta siswa ganti di Profil.')
+                            ->success()
+                            ->persistent()
+                            ->send();
+                    }),
                 EditAction::make()->label('Ubah'),
                 DeleteAction::make()->label('Hapus'),
             ]);

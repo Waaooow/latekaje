@@ -3,6 +3,7 @@
 namespace App\Filament\Imports;
 
 use App\Models\Student;
+use App\Models\User;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
@@ -30,6 +31,11 @@ class StudentImporter extends Importer
                 ->rules(['required', 'string', 'max:255'])
                 ->examples(['X TJKT 1'])
                 ->fillRecordUsing(fn () => null),
+
+            ImportColumn::make('password')
+                ->rules(['nullable', 'string', 'max:255'])
+                ->examples(['1001'])
+                ->fillRecordUsing(fn () => null),
         ];
     }
 
@@ -46,6 +52,19 @@ class StudentImporter extends Importer
         if ($nis !== '') {
             $student = Student::firstOrNew(['nis' => $nis]);
             $student->fill(['nama' => $nama, 'kelas' => $kelas, 'aktif' => true]);
+            $student->save();
+
+            $password = trim((string) ($this->data['password'] ?? ''));
+
+            User::updateOrCreate(
+                ['nis' => $nis, 'role' => 'siswa'],
+                [
+                    'name' => $nama,
+                    'email' => $nis.'@siswa.latekaje',
+                    'password' => $password !== '' ? $password : $nis,
+                    'student_id' => $student->id,
+                ]
+            );
 
             return $student;
         }

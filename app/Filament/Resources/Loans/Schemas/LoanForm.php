@@ -17,6 +17,18 @@ use Illuminate\Support\HtmlString;
 
 class LoanForm
 {
+    private static function lockedToSelf(): bool
+    {
+        $user = auth()->user();
+
+        return (bool) ($user?->isSiswa() && ($user->student_id || $user->nis));
+    }
+
+    private static function selfStudent(): ?\App\Models\Student
+    {
+        return auth()->user()?->student;
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -163,6 +175,8 @@ class LoanForm
 
                     Select::make('student_id')
                         ->label('Pilih Siswa (ketik nama / NIS)')
+                        ->disabled(fn (): bool => self::lockedToSelf())
+                        ->default(fn () => auth()->user()?->student_id)
                         ->searchable()
                         ->options(fn () => Student::where('aktif', true)->orderBy('nama')->get()->mapWithKeys(fn ($st) => [$st->id => $st->label()]))
                         ->afterStateUpdated(function (Set $set, $state): void {
@@ -199,6 +213,8 @@ class LoanForm
 
                     TextInput::make('nama_siswa')
                         ->label('Nama Lengkap')
+                        ->disabled(fn (): bool => self::lockedToSelf())
+                        ->default(fn () => self::selfStudent()?->nama ?? auth()->user()?->name)
                         ->placeholder('Terisi otomatis dari siswa terpilih')
                         ->required()
                         ->maxLength(255)
@@ -206,6 +222,8 @@ class LoanForm
 
                     Select::make('kelas')
                         ->label('Kelas / Asal')
+                        ->disabled(fn (): bool => self::lockedToSelf())
+                        ->default(fn () => self::selfStudent()?->kelas)
                         ->required()
                         ->searchable()
                         ->options(fn () => SchoolClass::orderBy('label')->pluck('label', 'label'))

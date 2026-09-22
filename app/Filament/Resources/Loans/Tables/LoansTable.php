@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\Loans\Tables;
 
+use App\Filament\Exports\LoanExporter;
 use App\Services\LoanService;
 use Filament\Actions\Action;
+use Filament\Actions\ExportAction;
+use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -88,6 +91,14 @@ class LoansTable
 
                         return $query->where('status', $value);
                     }),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exporter(LoanExporter::class)
+                    ->formats([ExportFormat::Xlsx, ExportFormat::Csv])
+                    ->label('Export Rekap')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
             ])
             ->recordActions([
                 Action::make('kembalikan')

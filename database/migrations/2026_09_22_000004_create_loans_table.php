@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('loans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('asset_item_id')->constrained('asset_items')->restrictOnDelete();
+            $table->foreignId('asset_item_id')->nullable()->constrained('asset_items')->restrictOnDelete();
             $table->string('nama_siswa');
             $table->string('kelas');
             $table->timestamp('tanggal_pinjam')->useCurrent();

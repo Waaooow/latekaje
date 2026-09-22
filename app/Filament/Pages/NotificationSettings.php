@@ -48,6 +48,8 @@ class NotificationSettings extends Page
             'gowa_user' => Setting::get('gowa_user', ''),
             'gowa_pass' => Setting::get('gowa_pass', ''),
             'gowa_target' => Setting::get('gowa_target', ''),
+            'gowa_relay_url' => Setting::get('gowa_relay_url', ''),
+            'gowa_relay_secret' => Setting::get('gowa_relay_secret', ''),
             'webhook_enabled' => Setting::boolean('webhook_enabled', false),
             'webhook_url' => Setting::get('webhook_url', ''),
             'webhook_auth' => Setting::get('webhook_auth', 'header'),

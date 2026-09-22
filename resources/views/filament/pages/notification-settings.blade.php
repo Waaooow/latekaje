@@ -50,6 +50,14 @@
                         <label class="mb-1.5 block text-sm font-medium">Target (nomor 628.. / JID grup ....@g.us)</label>
                         <input wire:model="form.gowa_target" placeholder="6281234567890" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
                     </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-sm font-medium">Relay URL <span class="font-normal text-gray-400">(opsional — bila GOWA tidak terjangkau langsung dari server)</span></label>
+                        <input wire:model="form.gowa_relay_url" placeholder="http://100.64.0.10:8099" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="mb-1.5 block text-sm font-medium">Relay Secret</label>
+                        <input type="password" wire:model="form.gowa_relay_secret" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                    </div>
                 </div>
                 <div class="mt-6 flex flex-wrap items-center gap-3">
                     <x-filament::button wire:click="testGowa" color="gray" icon="heroicon-o-signal">

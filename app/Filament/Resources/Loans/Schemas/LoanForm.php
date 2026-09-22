@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Loans\Schemas;
 
 use App\Models\AssetItem;
 use App\Models\SchoolClass;
+use App\Models\Student;
 use Closure;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -16,14 +17,26 @@ use Illuminate\Support\HtmlString;
 
 class LoanForm
 {
+    private static function lockedToSelf(): bool
+    {
+        $user = auth()->user();
+
+        return (bool) ($user?->isSiswa() && ($user->student_id || $user->nis));
+    }
+
+    private static function selfStudent(): ?\App\Models\Student
+    {
+        return auth()->user()?->student;
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
             Hidden::make('asset_item_id')
                 ->required(),
 
-            Section::make('Langkah 1 — Scan Alat')
-                ->description('Arahkan stiker QR ke kamera, atau ketik kodenya manual bila kamera tidak tersedia.')
+            Section::make(__('loans.step1_title'))
+                ->description(__('loans.step1_desc'))
                 ->schema([
                     Placeholder::make('qr_scanner')
                         ->hiddenLabel()
@@ -38,15 +51,15 @@ class LoanForm
                                     </select>
                                 </div>
                                 <div class="lk-row">
-                                    <button type="button" @click="restart()" class="lk-btn lk-btn-primary">Scan Ulang</button>
-                                    <button type="button" @click="stop()" class="lk-btn">Matikan Kamera</button>
+                                    <button type="button" @click="restart()" class="lk-btn lk-btn-primary">'.__('loans.scan_retry').'</button>
+                                    <button type="button" @click="stop()" class="lk-btn">'.__('loans.camera_off').'</button>
                                 </div>
                             </div>
                         ')),
 
                     TextInput::make('nomor_seri_atau_qr')
-                        ->label('Kode Alat')
-                        ->placeholder('Hasil scan muncul di sini, atau ketik manual cth: LTKJ-0001')
+                        ->label(__('loans.qr_code_label'))
+                        ->placeholder(__('loans.qr_code_placeholder'))
                         ->live()
                         ->dehydrated(false)
                         ->required()
@@ -61,19 +74,19 @@ class LoanForm
                                     ->first();
 
                                 if (! $item) {
-                                    $fail('Kode alat tidak terdaftar.');
+                                    $fail(__('loans.val_code_unknown'));
 
                                     return;
                                 }
 
                                 if ($item->status === 'dipinjam' || $item->activeLoan()->exists()) {
-                                    $fail('Alat sedang dipinjam.');
+                                    $fail(__('loans.val_borrowed'));
 
                                     return;
                                 }
 
                                 if ($item->kondisi !== 'baik') {
-                                    $fail('Alat kondisi rusak, tidak layak pinjam.');
+                                    $fail(__('loans.val_damaged'));
                                 }
                             },
                         ])
@@ -98,8 +111,8 @@ class LoanForm
                         ->extraAttributes(['id' => 'loan-qr-field']),
                 ]),
 
-            Section::make('Langkah 2 — Siapa yang Meminjam')
-                ->description('Tulis nama asli sesuai absen. Akun ini dipakai bersama, jadi jangan asal isi.')
+            Section::make(__('loans.step2_title'))
+                ->description(__('loans.step2_desc'))
                 ->schema([
                     Placeholder::make('borrower_memory')
                         ->hiddenLabel()
@@ -156,35 +169,77 @@ class LoanForm
                                             sel.dispatchEvent(new Event(\'change\', { bubbles: true }));
                                         }
                                     } catch (e) {}
-                                ">Pakai lagi: <span x-text="label"></span></button>
+                                ">'.__('loans.reuse_prefix').'<span x-text="label"></span></button>
                             </div>
                         ')),
 
+                    Select::make('student_id')
+                        ->label(__('loans.select_student'))
+                        ->disabled(fn (): bool => self::lockedToSelf())
+                        ->default(fn () => auth()->user()?->student_id)
+                        ->searchable()
+                        ->options(fn () => Student::where('aktif', true)->orderBy('nama')->get()->mapWithKeys(fn ($st) => [$st->id => $st->label()]))
+                        ->afterStateUpdated(function (Set $set, $state): void {
+                            $st = $state ? Student::find($state) : null;
+                            $set('nis', $st?->nis);
+                            if ($st) {
+                                $set('nama_siswa', $st->nama);
+                                $set('kelas', $st->kelas);
+                            }
+                        })
+                        ->createOptionForm([
+                            TextInput::make('nis')
+                                ->label(__('loans.nis_label'))
+                                ->maxLength(64),
+                            TextInput::make('nama')
+                                ->label(__('loans.full_name'))
+                                ->required()
+                                ->maxLength(255),
+                            Select::make('kelas')
+                                ->label(__('loans.class_label'))
+                                ->required()
+                                ->searchable()
+                                ->options(fn () => SchoolClass::orderBy('label')->pluck('label', 'label')),
+                        ])
+                        ->createOptionUsing(fn (array $data): int => Student::create([
+                            'nis' => blank($data['nis'] ?? null) ? null : trim((string) $data['nis']),
+                            'nama' => trim((string) $data['nama']),
+                            'kelas' => $data['kelas'],
+                            'aktif' => true,
+                        ])->getKey())
+                        ->helperText(__('loans.helper_new_student')),
+
+                    Hidden::make('nis'),
+
                     TextInput::make('nama_siswa')
-                        ->label('Nama Lengkap')
-                        ->placeholder('cth: Budi Santoso')
+                        ->label(__('loans.full_name'))
+                        ->disabled(fn (): bool => self::lockedToSelf())
+                        ->default(fn () => self::selfStudent()?->nama ?? auth()->user()?->name)
+                        ->placeholder(__('loans.name_auto_placeholder'))
                         ->required()
                         ->maxLength(255)
                         ->extraAttributes(['id' => 'loan-nama-field']),
 
                     Select::make('kelas')
-                        ->label('Kelas / Asal')
+                        ->label(__('loans.class_origin'))
+                        ->disabled(fn (): bool => self::lockedToSelf())
+                        ->default(fn () => self::selfStudent()?->kelas)
                         ->required()
                         ->searchable()
                         ->options(fn () => SchoolClass::orderBy('label')->pluck('label', 'label'))
                         ->extraAttributes(['id' => 'loan-kelas-field']),
                 ]),
 
-            Section::make('Langkah 3 — Kunci dengan PIN')
-                ->description('PIN ini WAJIB dibawa saat mengembalikan alat. Catat / foto layar ini.')
+            Section::make(__('loans.step3_title'))
+                ->description(__('loans.step3_desc'))
                 ->schema([
                     TextInput::make('return_pin')
-                        ->label('PIN Pengembalian (6 digit)')
+                        ->label(__('loans.form_pin_label'))
                         ->required()
                         ->length(6)
                         ->rule('regex:/^[0-9]{6}$/')
                         ->default(fn (): string => sprintf('%06d', random_int(0, 999999)))
-                        ->helperText('Sudah terisi otomatis — boleh diganti dengan yang mudah kamu ingat.'),
+                        ->helperText(__('loans.pin_helper')),
                 ]),
         ]);
     }

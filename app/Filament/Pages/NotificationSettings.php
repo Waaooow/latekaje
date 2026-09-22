@@ -15,7 +15,9 @@ class NotificationSettings extends Page
 {
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-bell';
 
-    protected static ?string $navigationLabel = 'Notifikasi';
+    protected static ?string $navigationLabel = 'Setting';
+
+    protected static ?string $slug = 'setting';
 
     protected static ?string $title = 'Notifikasi';
 
@@ -133,6 +135,55 @@ class NotificationSettings extends Page
             : 'Gagal (HTTP '.$res['status'].'): '.$res['body'];
     }
 
+    public string $apiTest = '';
+
+    public string $newTokenName = '';
+
+    public ?string $newTokenPlain = null;
+
+    public function toggleMaintenance(): void
+    {
+        abort_unless(self::canAccess(), 403);
+
+        if (app()->isDownForMaintenance()) {
+            \Illuminate\Support\Facades\Artisan::call('up');
+
+            Notification::make()->title('Mode perawatan MATI — aplikasi live')->success()->send();
+        } else {
+            \Illuminate\Support\Facades\Artisan::call('down', ['--render' => 'errors::503']);
+
+            Notification::make()->title('Mode perawatan NYALA — hanya superadmin bisa buka')->warning()->persistent()->send();
+        }
+    }
+
+    public function createApiToken(): void
+    {
+        abort_unless(auth()->user()?->isSuperadmin(), 403);
+
+        $name = trim($this->newTokenName);
+
+        if ($name === '') {
+            Notification::make()->title('Isi nama token dulu')->danger()->send();
+
+            return;
+        }
+
+        $token = auth()->user()->createToken($name, ['*']);
+        $this->newTokenPlain = $token->plainTextToken;
+        $this->newTokenName = '';
+
+        Notification::make()->title('Token dibuat — salin sekarang, hanya tampil sekali')->success()->persistent()->send();
+    }
+
+    public function revokeApiToken(int $id): void
+    {
+        abort_unless(auth()->user()?->isSuperadmin(), 403);
+
+        auth()->user()->tokens()->whereKey($id)->delete();
+
+        Notification::make()->title('Token dicabut')->success()->send();
+    }
+
     public function sendNow(): void
     {
         abort_unless(self::canAccess(), 403);
@@ -152,6 +203,8 @@ class NotificationSettings extends Page
             'logs' => RecapLog::latest()->limit(10)->get(),
             'unreturnedCount' => \App\Models\Loan::where('status', 'aktif')->count(),
             'scheduleTime' => \App\Models\Setting::get('recap_time', '16:00'),
+            'maintenance' => app()->isDownForMaintenance(),
+            'tokens' => auth()->user()?->isSuperadmin() ? auth()->user()->tokens()->latest()->get() : collect(),
         ];
     }
 }

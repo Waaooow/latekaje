@@ -32,6 +32,7 @@ class UnreturnedTable extends BaseWidget
                     ->label('Kirim Rekap Sekarang')
                     ->icon('heroicon-o-paper-airplane')
                     ->color('info')
+                    ->visible(fn (): bool => in_array(auth()->user()?->role, ['superadmin', 'toolman', 'anak_pkl'], true))
                     ->action(function (): void {
                         $result = RecapService::sendNow();
 

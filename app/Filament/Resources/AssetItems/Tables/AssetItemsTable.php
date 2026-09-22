@@ -132,7 +132,7 @@ class AssetItemsTable
                         ->openUrlInNewTab(),
                 ])
                     ->label('Aksi')
-                    ->icon('heroicon-m-ellipsis-horizontal'),
+                    ->icon('heroicon-o-ellipsis-horizontal'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

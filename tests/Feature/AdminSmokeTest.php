@@ -9,7 +9,7 @@ class AdminSmokeTest extends TestCase
 {
     public function test_admin_pages_render(): void
     {
-        $user = User::where("email", "admin@gmail.com")->firstOrFail();
+        $user = User::where("email", "admin@latekaje.net")->first() ?? User::where("email", "admin@gmail.com")->firstOrFail();
         $this->actingAs($user);
 
         foreach (["/admin", "/admin/assets", "/admin/asset-items", "/admin/loans", "/admin/loans/create", "/admin/locations", "/admin/data-per-lokasi", "/admin/about-app", "/admin/user-resource/users"] as $url) {

@@ -25,6 +25,11 @@ class Loan extends Model
         return $this->belongsTo(AssetItem::class);
     }
 
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
+
     public function getNamaAlatAttribute(): string
     {
         return $this->assetItem?->asset?->nama_alat ?? '(unit dihapus)';

@@ -30,6 +30,15 @@ class LoansTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('nis')
+                    ->label('NIS')
+                    ->badge()
+                    ->color('gray')
+                    ->copyable()
+                    ->searchable()
+                    ->placeholder('-')
+                    ->toggleable(),
+
                 TextColumn::make('nama_siswa')
                     ->label('Peminjam')
                     ->description(fn ($record) => $record->kelas)

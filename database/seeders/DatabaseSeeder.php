@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\AssetItem;
 use App\Models\Location;
 use App\Models\SchoolClass;
+use App\Models\Student;
 use App\Models\User;
 use App\Services\LoanService;
 use Illuminate\Database\Seeder;
@@ -55,6 +56,15 @@ class DatabaseSeeder extends Seeder
                 'role' => 'superadmin',
             ]
         );
+
+        foreach ([
+            ['1001', 'Budi Santoso', 'X TJKT 1'],
+            ['1002', 'Siti Aminah', 'X TJKT 1'],
+            ['1003', 'Andi Pratama', 'X TJKT 2'],
+        ] as [$nis, $nama, $kelas]) {
+            SchoolClass::firstOrCreate(['key' => \Illuminate\Support\Str::slug($kelas, '_')], ['label' => $kelas]);
+            Student::firstOrCreate(['nis' => $nis], ['nama' => $nama, 'kelas' => $kelas, 'aktif' => true]);
+        }
 
         foreach ([
             'x_tjkt_1' => 'X TJKT 1',

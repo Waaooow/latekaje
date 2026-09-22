@@ -25,6 +25,9 @@ class LoanExporter extends Exporter
             ExportColumn::make('assetItem.nomor_seri_atau_qr')
                 ->label('Kode QR'),
 
+            ExportColumn::make('nis')
+                ->label('NIS'),
+
             ExportColumn::make('nama_siswa')
                 ->label('Peminjam'),
 

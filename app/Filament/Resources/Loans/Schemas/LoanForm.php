@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Loans\Schemas;
 
 use App\Models\AssetItem;
 use App\Models\SchoolClass;
+use App\Models\Student;
 use Closure;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -160,9 +161,45 @@ class LoanForm
                             </div>
                         ')),
 
+                    Select::make('student_id')
+                        ->label('Pilih Siswa (ketik nama / NIS)')
+                        ->searchable()
+                        ->options(fn () => Student::where('aktif', true)->orderBy('nama')->get()->mapWithKeys(fn ($st) => [$st->id => $st->label()]))
+                        ->afterStateUpdated(function (Set $set, $state): void {
+                            $st = $state ? Student::find($state) : null;
+                            $set('nis', $st?->nis);
+                            if ($st) {
+                                $set('nama_siswa', $st->nama);
+                                $set('kelas', $st->kelas);
+                            }
+                        })
+                        ->createOptionForm([
+                            TextInput::make('nis')
+                                ->label('NIS')
+                                ->maxLength(64),
+                            TextInput::make('nama')
+                                ->label('Nama Lengkap')
+                                ->required()
+                                ->maxLength(255),
+                            Select::make('kelas')
+                                ->label('Kelas')
+                                ->required()
+                                ->searchable()
+                                ->options(fn () => SchoolClass::orderBy('label')->pluck('label', 'label')),
+                        ])
+                        ->createOptionUsing(fn (array $data): int => Student::create([
+                            'nis' => blank($data['nis'] ?? null) ? null : trim((string) $data['nis']),
+                            'nama' => trim((string) $data['nama']),
+                            'kelas' => $data['kelas'],
+                            'aktif' => true,
+                        ])->getKey())
+                        ->helperText('Siswa belum terdaftar? Ketik lalu pilih “Buat baru”. Bisa juga isi manual di bawah.'),
+
+                    Hidden::make('nis'),
+
                     TextInput::make('nama_siswa')
                         ->label('Nama Lengkap')
-                        ->placeholder('cth: Budi Santoso')
+                        ->placeholder('Terisi otomatis dari siswa terpilih')
                         ->required()
                         ->maxLength(255)
                         ->extraAttributes(['id' => 'loan-nama-field']),

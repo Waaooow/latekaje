@@ -10,42 +10,62 @@ class InventoryLocationChart extends ChartWidget
 {
     protected static ?int $sort = 3;
 
-    protected ?string $heading = 'Unit per Lokasi';
+    protected ?string $heading = "Unit per Lokasi";
 
     protected function getType(): string
     {
-        return 'doughnut';
+        return "doughnut";
     }
 
     protected function getData(): array
     {
-        $grouped = AssetItem::query()
-            ->selectRaw('location_id, COUNT(*) as aggregate')
-            ->groupBy('location_id')
-            ->pluck('aggregate', 'location_id');
+        $standardColors = [
+            "gudang" => "#f43f5e",
+            "ruang_kantor" => "#3b82f6",
+            "lab_tjkt" => "#10b981",
+            "lab_kkpi" => "#f59e0b",
+            "lab_fo" => "#8b5cf6",
+        ];
 
-        $labels = Location::query()
-            ->whereIn('id', $grouped->keys()->all())
-            ->pluck('label', 'id');
+        $fallbackPalette = ["#ec4899", "#14b8a6", "#6366f1", "#a855f7", "#6b7280", "#f97316"];
+
+        $grouped = AssetItem::query()
+            ->selectRaw("location_id, COUNT(*) as aggregate")
+            ->groupBy("location_id")
+            ->pluck("aggregate", "location_id");
+
+        $locations = Location::query()
+            ->whereIn("id", $grouped->keys()->all())
+            ->get(["id", "key", "label"])
+            ->keyBy("id");
 
         $chartLabels = [];
         $chartData = [];
+        $chartColors = [];
+        $i = 0;
 
         foreach ($grouped as $locationId => $count) {
-            $chartLabels[] = ($labels[$locationId] ?? 'Tanpa lokasi')." ({$count})";
+            $loc = $locations->get($locationId);
+            $label = $loc?->label ?? "Tanpa lokasi";
+            $key = $loc?->key ?? "";
+            $chartLabels[] = "{$label} ({$count})";
             $chartData[] = (int) $count;
+            $chartColors[] = $standardColors[$key] ?? $fallbackPalette[$i % count($fallbackPalette)];
+            $i++;
         }
 
         if ($chartData === []) {
-            $chartLabels = ['Belum ada data'];
+            $chartLabels = ["Belum ada data"];
             $chartData = [0];
+            $chartColors = ["#e5e7eb"];
         }
 
         return [
-            'labels' => $chartLabels,
-            'datasets' => [
+            "labels" => $chartLabels,
+            "datasets" => [
                 [
-                    'data' => $chartData,
+                    "data" => $chartData,
+                    "backgroundColor" => $chartColors,
                 ],
             ],
         ];

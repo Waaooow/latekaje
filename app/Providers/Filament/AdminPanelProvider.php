@@ -60,7 +60,6 @@ class AdminPanelProvider extends PanelProvider
                 fn (): string => <<<'HTML'
                     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
                     <style>
-                    #reader-loan-inline video, #reader-table-return video { transform: scaleX(-1) !important; }
                     #reader-loan-inline, #reader-table-return { background: #000; }
                     </style>
                     <script>

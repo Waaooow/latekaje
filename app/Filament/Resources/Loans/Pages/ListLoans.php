@@ -14,7 +14,7 @@ class ListLoans extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Pinjam Alat')
+                ->label(__('loans.create_label'))
                 ->icon('heroicon-o-plus'),
         ];
     }

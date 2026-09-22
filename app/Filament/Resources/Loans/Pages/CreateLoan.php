@@ -36,8 +36,8 @@ class CreateLoan extends CreateRecord
         );
 
         Notification::make()
-            ->title('Peminjaman tercatat — PIN: '.$loan->return_pin)
-            ->body('Catat/foto PIN ini. Untuk mengembalikan: scan QR + PIN + nama pengembali.')
+            ->title(__('loans.created_title', ['pin' => $loan->return_pin]))
+            ->body(__('loans.created_body'))
             ->success()
             ->persistent()
             ->send();

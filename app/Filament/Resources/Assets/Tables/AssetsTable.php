@@ -30,22 +30,27 @@ class AssetsTable
             ]))
             ->columns([
                 TextColumn::make('kode_aset')
+                    ->label(__('assets.code_label'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('nama_alat')
+                    ->label(__('assets.name_label'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('jenis')
+                    ->label(__('assets.type_label'))
                     ->badge()
                     ->color('info'),
 
                 TextColumn::make('spesifikasi')
+                    ->label(__('assets.spec_label'))
                     ->limit(30)
                     ->tooltip(fn ($record): ?string => $record->spesifikasi),
 
                 TextColumn::make('kegunaan')
+                    ->label(__('assets.usage_label'))
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'praktik' => '🛠️ Praktik',
@@ -58,20 +63,20 @@ class AssetsTable
                     }),
 
                 TextColumn::make('status_kondisi')
-                    ->label('Status Kondisi')
+                    ->label(__('assets.condition_status_label'))
                     ->html()
                     ->getStateUsing(function ($record): string {
                         $baik = (int) ($record->unit_baik ?? 0);
                         $rusak = (int) ($record->unit_rusak ?? 0);
                         $rusakTotal = (int) ($record->unit_rusak_total ?? 0);
 
-                        return "<span class=\"fi-badge\">Baik: {$baik}</span> "
-                            . "<span class=\"fi-badge\">Rusak: {$rusak}</span> "
-                            . "<span class=\"fi-badge\">Rusak Total: {$rusakTotal}</span>";
+                        return '<span class="fi-badge">'.__('assets.condition_good').": {$baik}</span> "
+                            .'<span class="fi-badge">'.__('assets.condition_damaged').": {$rusak}</span> "
+                            .'<span class="fi-badge">'.__('assets.condition_total_loss').": {$rusakTotal}</span>";
                     }),
 
                 TextColumn::make('asset_items_count')
-                    ->label('Jumlah Unit')
+                    ->label(__('assets.unit_count_label'))
                     ->counts('assetItems')
                     ->badge()
                     ->sortable(),

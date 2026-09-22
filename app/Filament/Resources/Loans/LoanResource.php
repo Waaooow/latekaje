@@ -19,13 +19,22 @@ class LoanResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $navigationLabel = 'Peminjaman';
-
-    protected static ?string $modelLabel = 'Peminjaman';
-
-    protected static ?string $pluralModelLabel = 'Peminjaman';
-
     protected static ?string $recordTitleAttribute = 'nama_siswa';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('loans.nav_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('loans.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('loans.plural_model_label');
+    }
 
     public static function getEloquentQuery(): Builder
     {

@@ -14,7 +14,7 @@ class EditLoan extends EditRecord
     {
         return [
             DeleteAction::make()
-                    ->label('Hapus'),
+                    ->label(__('loans.delete_label')),
         ];
     }
 

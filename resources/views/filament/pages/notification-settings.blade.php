@@ -1,12 +1,54 @@
 <x-filament-panels::page>
-    <div class="lk-wrap">
+    <div x-data="{
+        confirmMaintenance: false,
+        confirm() {
+            this.confirmMaintenance = true;
+        },
+        executeMaintenance() {
+            this.confirmMaintenance = false;
+            @this.toggleMaintenance();
+        },
+        init() {
+            @this.on('confirm-maintenance-toggle', () => this.confirm());
+        }
+    }" class="lk-wrap">
         <x-filament::section>
             <x-slot name="heading">Aplikasi</x-slot>
             <x-slot name="description">Status: {{ $maintenance ? 'MODE PERAWATAN (tutup untuk umum)' : 'Live normal' }}.</x-slot>
 
-            <x-filament::button wire:click="toggleMaintenance" :color="$maintenance ? 'success' : 'danger'" icon="heroicon-o-wrench">
+            <x-filament::button wire:click="$dispatch('confirm-maintenance-toggle')" :color="$maintenance ? 'success' : 'danger'" icon="heroicon-o-wrench">
                 {{ $maintenance ? 'Matikan Mode Perawatan' : 'Nyalakan Mode Perawatan' }}
             </x-filament::button>
+
+            <!-- Confirmation Modal for Maintenance Toggle -->
+            <div x-show="confirmMaintenance" x-transition x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4">
+                    <div x-show="confirmMaintenance" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-black/50"></div>
+                    <div x-show="confirmMaintenance" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+                                <x-filament::icon icon="heroicon-o-wrench" class="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                {{ $maintenance ? 'Matikan Mode Perawatan?' : 'Nyalakan Mode Perawatan?' }}
+                            </h3>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6">
+                            {{ $maintenance
+                                ? 'Mode perawatan akan dimatikan dan aplikasi akan tersedia untuk semua pengguna. Lanjutkan?'
+                                : 'Aplikasi akan masuk mode perawatan. Semua pengguna kecuali superadmin tidak bisa mengakses aplikasi. Lanjutkan?' }}
+                        </p>
+                        <div class="flex justify-end gap-3">
+                            <button type="button" @click="confirmMaintenance = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                                Batal
+                            </button>
+                            <button type="button" @click="executeMaintenance" class="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors">
+                                {{ $maintenance ? 'Ya, Matikan' : 'Ya, Nyalakan' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </x-filament::section>
 
         <x-filament::section>

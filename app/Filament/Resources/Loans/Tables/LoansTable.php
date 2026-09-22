@@ -25,13 +25,13 @@ class LoansTable
         return $table
             ->columns([
                 TextColumn::make('assetItem.nomor_seri_atau_qr')
-                    ->label('Kode QR')
-                    ->formatStateUsing(fn (?string $state): string => $state ?? '(unit dihapus)')
+                    ->label(__('loans.col_qr'))
+                    ->formatStateUsing(fn (?string $state): string => $state ?? __('loans.unit_deleted'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('nis')
-                    ->label('NIS')
+                    ->label(__('loans.col_nis'))
                     ->badge()
                     ->color('gray')
                     ->copyable()
@@ -40,58 +40,58 @@ class LoansTable
                     ->toggleable(),
 
                 TextColumn::make('nama_siswa')
-                    ->label('Peminjam')
+                    ->label(__('loans.col_borrower'))
                     ->description(fn ($record) => $record->kelas)
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('return_pin')
-                    ->label('PIN')
+                    ->label(__('loans.col_pin'))
                     ->badge()
                     ->color('info')
                     ->copyable()
                     ->visible(fn () => ! auth()->user()?->isSiswa()),
 
                 TextColumn::make('tanggal_pinjam')
-                    ->label('Tgl Pinjam')
+                    ->label(__('loans.col_borrowed_at'))
                     ->dateTime('d M Y H:i')
                     ->sortable(),
 
                 TextColumn::make('tanggal_kembali')
-                    ->label('Tgl Kembali')
+                    ->label(__('loans.col_returned_at'))
                     ->dateTime('d M Y H:i')
                     ->placeholder('-')
                     ->sortable(),
 
                 TextColumn::make('status')
-                    ->label('Status')
+                    ->label(__('loans.col_status'))
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => $state === 'aktif' ? 'Dipinjam' : 'Kembali')
+                    ->formatStateUsing(fn (string $state): string => $state === 'aktif' ? __('loans.status_borrowed') : __('loans.status_returned'))
                     ->color(fn (string $state): string => $state === 'aktif' ? 'warning' : 'success'),
 
                 TextColumn::make('returned_by')
-                    ->label('Dikembalikan Oleh')
-                    ->description(fn ($record) => trim(($record->return_relation === 'wakil' ? 'Di Wakilkan' : 'Sendiri').($record->received_by ? ' · Diterima: '.$record->received_by : '')))
+                    ->label(__('loans.col_returned_by'))
+                    ->description(fn ($record) => trim(($record->return_relation === 'wakil' ? __('loans.relation_proxy') : __('loans.relation_self')).($record->received_by ? __('loans.received_by_suffix', ['name' => $record->received_by]) : '')))
                     ->placeholder('-')
                     ->toggleable(),
 
                 TextColumn::make('return_method')
-                    ->label('Metode')
+                    ->label(__('loans.col_method'))
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => $state === 'petugas' ? 'Petugas' : ($state ? 'Mandiri' : '-'))
+                    ->formatStateUsing(fn (?string $state): string => $state === 'petugas' ? __('loans.method_staff') : ($state ? __('loans.method_self') : '-'))
                     ->color(fn (?string $state): string => $state === 'petugas' ? 'info' : 'gray')
                     ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Status')
+                    ->label(__('loans.filter_status'))
                     ->options([
-                        'semua' => 'Semua',
-                        'aktif' => 'Dipinjam',
-                        'kembali' => 'Kembali',
+                        'semua' => __('loans.filter_all'),
+                        'aktif' => __('loans.filter_borrowed'),
+                        'kembali' => __('loans.filter_returned'),
                     ])
                     ->default('aktif')
-                    ->placeholder('Semua')
+                    ->placeholder(__('loans.filter_all'))
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;
 
@@ -107,17 +107,17 @@ class LoansTable
                     ->exporter(LoanExporter::class)
                     ->visible(fn (): bool => in_array(auth()->user()?->role, ['superadmin', 'toolman', 'anak_pkl'], true))
                     ->formats([ExportFormat::Xlsx, ExportFormat::Csv])
-                    ->label('Export Rekap')
+                    ->label(__('loans.export_recap'))
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success'),
             ])
             ->recordActions([
                 Action::make('kembalikan')
-                    ->label('Kembalikan')
+                    ->label(__('loans.action_return'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn ($record): bool => $record->status === 'aktif')
-                    ->modalHeading('Kembalikan Alat')
+                    ->modalHeading(__('loans.return_modal_heading'))
                     ->modalDescription(new HtmlString('
                         <div x-data="latekajeScanner(\'reader-table-return\', \'qr-table-return-field\')" x-init="init()" style="margin-bottom: 0.75rem;">
                             <div id="reader-table-return" class="lk-reader"></div>
@@ -129,45 +129,45 @@ class LoansTable
                                 </select>
                             </div>
                             <div class="lk-row">
-                                <button type="button" @click="restart()" class="lk-btn lk-btn-primary">Scan Ulang</button>
-                                <button type="button" @click="stop()" class="lk-btn">Matikan Kamera</button>
+                                <button type="button" @click="restart()" class="lk-btn lk-btn-primary">'.__('loans.scan_retry').'</button>
+                                <button type="button" @click="stop()" class="lk-btn">'.__('loans.camera_off').'</button>
                             </div>
-                            <p class="lk-hint">Hasil scan mengisi kolom Kode QR di bawah — modal tetap terbuka, isi form lalu tekan Konfirmasi.</p>
+                            <p class="lk-hint">'.__('loans.scan_hint_table').'</p>
                         </div>
                     '))
                     ->schema([
                         TextInput::make('nomor_seri_atau_qr')
-                            ->label('Scan / Ketik Kode QR Alat')
+                            ->label(__('loans.form_qr_label'))
                             ->required()
                             ->live()
                             ->extraAttributes(['id' => 'qr-table-return-field']),
 
                         TextInput::make('pin')
-                            ->label('PIN Pengembalian (6 digit)')
+                            ->label(__('loans.form_pin_label'))
                             ->required()
                             ->length(6)
-                            ->placeholder('Diberikan saat meminjam'),
+                            ->placeholder(__('loans.form_pin_placeholder')),
 
                         TextInput::make('returned_by')
-                            ->label('Nama Pengembali (yang bawa alat)')
+                            ->label(__('loans.form_returned_by_label'))
                             ->required()
-                            ->placeholder('cth: Budi Santoso'),
+                            ->placeholder(__('loans.form_returned_by_placeholder')),
 
                         Select::make('return_relation')
-                            ->label('Status Pengembali')
+                            ->label(__('loans.form_relation_label'))
                             ->options([
-                                'sendiri' => 'Peminjam sendiri',
-                                'wakil' => 'Di Wakilkan teman',
+                                'sendiri' => __('loans.form_relation_self'),
+                                'wakil' => __('loans.form_relation_proxy'),
                             ])
                             ->default('sendiri')
                             ->required(),
 
                         TextInput::make('received_by')
-                            ->label('Diterima Oleh Petugas (opsional)')
-                            ->placeholder('Kosongkan bila mandiri / tanpa petugas'),
+                            ->label(__('loans.form_received_by_label'))
+                            ->placeholder(__('loans.form_received_by_placeholder')),
 
                         FileUpload::make('return_photo_path')
-                            ->label('Foto Bukti (opsional)')
+                            ->label(__('loans.form_photo_label'))
                             ->image()
                             ->disk('public')
                             ->directory('returns')
@@ -185,7 +185,7 @@ class LoansTable
                             ]);
                         } catch (ValidationException $e) {
                             Notification::make()
-                                ->title('Gagal mengembalikan')
+                                ->title(__('loans.return_failed_title'))
                                 ->body(collect($e->errors())->flatten()->implode(' '))
                                 ->danger()
                                 ->persistent()
@@ -195,8 +195,8 @@ class LoansTable
                         }
 
                         Notification::make()
-                            ->title('Alat dikembalikan')
-                            ->body('Peminjaman '.$record->nama_siswa.' telah ditutup.')
+                            ->title(__('loans.returned_title'))
+                            ->body(__('loans.returned_body', ['name' => $record->nama_siswa]))
                             ->success()
                             ->send();
                     }),

@@ -33,7 +33,7 @@ class AssetItemForm
                 ->maxLength(255)
                 ->suffixAction(
                     Action::make('generate')
-                        ->icon('heroicon-m-arrow-path')
+                        ->icon('heroicon-o-arrow-path')
                         ->action(function (Set $set): void {
                             $set('nomor_seri_atau_qr', AssetItemCode::next());
                         })

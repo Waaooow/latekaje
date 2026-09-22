@@ -20,58 +20,58 @@ class LoanExporter extends Exporter
 
         return [
             ExportColumn::make('nama_alat')
-                ->label('Alat'),
+                ->label(__('loans.exp_tool')),
 
             ExportColumn::make('assetItem.nomor_seri_atau_qr')
-                ->label('Kode QR'),
+                ->label(__('loans.exp_qr')),
 
             ExportColumn::make('nis')
-                ->label('NIS'),
+                ->label(__('loans.exp_nis')),
 
             ExportColumn::make('nama_siswa')
-                ->label('Peminjam'),
+                ->label(__('loans.exp_borrower')),
 
             ExportColumn::make('kelas')
-                ->label('Kelas'),
+                ->label(__('loans.exp_class')),
 
             ExportColumn::make('tanggal_pinjam')
-                ->label('Tgl Pinjam')
+                ->label(__('loans.exp_borrowed_at'))
                 ->formatStateUsing($dt),
 
             ExportColumn::make('tanggal_kembali')
-                ->label('Tgl Kembali')
+                ->label(__('loans.exp_returned_at'))
                 ->formatStateUsing($dt),
 
             ExportColumn::make('status')
-                ->label('Status')
-                ->formatStateUsing(fn (?string $state): string => $state === 'aktif' ? 'Dipinjam' : 'Kembali'),
+                ->label(__('loans.exp_status'))
+                ->formatStateUsing(fn (?string $state): string => $state === 'aktif' ? __('loans.exp_borrowed') : __('loans.exp_returned')),
 
             ExportColumn::make('lama_hari')
-                ->label('Lama'),
+                ->label(__('loans.exp_duration')),
 
             ExportColumn::make('return_pin')
-                ->label('PIN'),
+                ->label(__('loans.exp_pin')),
 
             ExportColumn::make('returned_by')
-                ->label('Dikembalikan Oleh'),
+                ->label(__('loans.exp_returned_by')),
 
             ExportColumn::make('return_relation')
-                ->label('Status Pengembali'),
+                ->label(__('loans.exp_returner_status')),
 
             ExportColumn::make('return_method')
-                ->label('Metode'),
+                ->label(__('loans.exp_method')),
 
             ExportColumn::make('received_by')
-                ->label('Diterima Petugas'),
+                ->label(__('loans.exp_received_by')),
         ];
     }
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Export rekap selesai: '.number_format($export->successful_rows).' baris.';
+        $body = __('loans.export_done', ['count' => number_format($export->successful_rows)]);
 
         if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' '.number_format($failedRowsCount).' baris gagal.';
+            $body .= ' '.__('loans.export_failed', ['count' => number_format($failedRowsCount)]);
         }
 
         return $body;

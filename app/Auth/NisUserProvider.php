@@ -43,6 +43,11 @@ class NisUserProvider extends EloquentUserProvider
 
     public function validateCredentials(Authenticatable $user, #[\SensitiveParameter] array $credentials): bool
     {
+        // Akun dinonaktifkan tidak bisa login walau password benar.
+        if ($user instanceof \App\Models\User && ! $user->is_active) {
+            return false;
+        }
+
         return parent::validateCredentials($user, $credentials);
     }
 }

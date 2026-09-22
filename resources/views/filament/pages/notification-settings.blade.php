@@ -1,6 +1,57 @@
 <x-filament-panels::page>
     <div class="lk-wrap">
         <x-filament::section>
+            <x-slot name="heading">Aplikasi</x-slot>
+            <x-slot name="description">Status: {{ $maintenance ? 'MODE PERAWATAN (tutup untuk umum)' : 'Live normal' }}.</x-slot>
+
+            <x-filament::button wire:click="toggleMaintenance" :color="$maintenance ? 'success' : 'danger'" icon="heroicon-o-wrench">
+                {{ $maintenance ? 'Matikan Mode Perawatan' : 'Nyalakan Mode Perawatan' }}
+            </x-filament::button>
+        </x-filament::section>
+
+        <x-filament::section>
+            <x-slot name="heading">API (untuk integrasi luar)</x-slot>
+            <x-slot name="description">Token milik akunmu. Sertakan sebagai header Authorization: Bearer &lt;token&gt;.</x-slot>
+
+            <div class="lk-grid lk-grid-2">
+                <div class="lk-field">
+                    <label>Nama token baru</label>
+                    <input wire:model="newTokenName" placeholder="cth: hp-kiosk-1" class="lk-input" />
+                </div>
+                <div class="lk-field">
+                    <label>&nbsp;</label>
+                    <x-filament::button wire:click="createApiToken" icon="heroicon-o-key">
+                        Buat Token
+                    </x-filament::button>
+                </div>
+            </div>
+            @if($newTokenPlain)
+            <div class="lk-btnrow">
+                <code class="lk-mono" style="user-select: all;">{{ $newTokenPlain }}</code>
+            </div>
+            @endif
+            <div class="lk-tablewrap" style="margin-top: 1rem;">
+                <table class="lk-table">
+                    <thead>
+                        <tr><th>Nama</th><th>Dibuat</th><th>Terakhir dipakai</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @forelse($tokens as $token)
+                        <tr>
+                            <td>{{ $token->name }}</td>
+                            <td>{{ $token->created_at->format('d M Y H:i') }}</td>
+                            <td>{{ $token->last_used_at?->format('d M Y H:i') ?? '-' }}</td>
+                            <td><x-filament::button wire:click="revokeApiToken({{ $token->id }})" color="danger" size="sm">Cabut</x-filament::button></td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="4" class="lk-empty">Belum ada token.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </x-filament::section>
+
+        <x-filament::section>
             <x-slot name="heading">Rekap Harian Otomatis</x-slot>
             <x-slot name="description">Jadwal aktif: setiap hari pukul {{ $scheduleTime }} WIB. Saat ini ada {{ $unreturnedCount }} unit belum kembali.</x-slot>
 

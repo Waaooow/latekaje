@@ -55,6 +55,10 @@
                     <x-filament::button wire:click="testGowa" color="gray" icon="heroicon-o-signal">
                         Tes Koneksi GOWA
                     </x-filament::button>
+                    <input wire:model="testTarget" placeholder="Nomor tes (kosongkan = pakai Target)" class="w-64 rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" />
+                    <x-filament::button wire:click="sendTestWa" color="gray" icon="heroicon-o-chat-bubble-left-right">
+                        Kirim Pesan Tes
+                    </x-filament::button>
                     @if($gowaTest)<span class="text-sm text-gray-500">{{ $gowaTest }}</span>@endif
                 </div>
             </x-filament::section>

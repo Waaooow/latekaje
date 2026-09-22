@@ -27,6 +27,8 @@ class NotificationSettings extends Page
 
     public string $webhookTest = '';
 
+    public string $testTarget = '';
+
     public static function canAccess(): bool
     {
         $user = auth()->user();
@@ -79,6 +81,33 @@ class NotificationSettings extends Page
         Notification::make()
             ->title($res['ok'] ? 'GOWA terhubung' : 'GOWA gagal')
             ->body(mb_substr($res['body'], 0, 200))
+            ->{ $res['ok'] ? 'success' : 'danger' }()
+            ->send();
+    }
+
+    public function sendTestWa(): void
+    {
+        abort_unless(self::canAccess(), 403);
+        $this->save();
+
+        $target = trim($this->testTarget) !== '' ? trim($this->testTarget) : (string) Setting::get('gowa_target', '');
+
+        if ($target === '') {
+            $this->gowaTest = 'Isi Nomor Tes dulu.';
+            return;
+        }
+
+        $res = GowaClient::fromSettings()->sendMessage(
+            $target,
+            'Tes LATEKAJE OK — '.now()->format('d M Y H:i').'. Balas pesan ini bila diterima.'
+        );
+        $this->gowaTest = $res['ok']
+            ? 'Pesan tes terkirim ke '.$target.'! (HTTP '.$res['status'].')'
+            : 'Gagal kirim ke '.$target.': '.$res['body'];
+
+        Notification::make()
+            ->title($res['ok'] ? 'Pesan tes terkirim' : 'Pesan tes gagal')
+            ->body(mb_substr($this->gowaTest, 0, 200))
             ->{ $res['ok'] ? 'success' : 'danger' }()
             ->send();
     }

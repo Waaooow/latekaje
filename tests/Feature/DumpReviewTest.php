@@ -10,7 +10,11 @@ class DumpReviewTest extends TestCase
     public function test_dump(): void
     {
         $email = env('REVIEW_USER_EMAIL', 'admin@latekaje.net');
-        $u = User::where('email', $email)->firstOrFail();
+        $u = User::where('email', $email)->first();
+
+        if (! $u) {
+            $this->markTestSkipped("review user $email tidak ada (test review dev).");
+        }
         $this->actingAs($u);
         $pages = [
             '/admin' => 'dashboard',

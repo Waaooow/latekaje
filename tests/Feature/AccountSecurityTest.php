@@ -10,11 +10,11 @@ class AccountSecurityTest extends TestCase
 {
     public function test_akun_nonaktif_dan_acl(): void
     {
-        $tool = User::updateOrCreate(
+        $tool = User::firstOrCreate(
             ['email' => 'tool-tes@latekaje.net'],
             ['name' => 'Tool Tes', 'password' => 'x', 'role' => 'toolman', 'is_active' => true],
         );
-        $siswa = User::updateOrCreate(
+        $siswa = User::firstOrCreate(
             ['email' => 'siswa-tes@latekaje.net'],
             ['name' => 'Siswa Tes', 'password' => 'x', 'role' => 'siswa', 'is_active' => true],
         );
@@ -39,6 +39,10 @@ class AccountSecurityTest extends TestCase
         // 3. ACL deny menimpa policy
         $this->actingAs($tool);
         $item = \App\Models\AssetItem::doesntHave('loans')->firstOrFail();
+        $this->assertTrue(Gate::allows('delete', $item), 'toolman seharusnya boleh hapus');
+        $tool->update(['permissions' => ['deny' => ['delete:AssetItem']]]);
+        $this->assertFalse(Gate::allows('delete', $item), 'deny ACL tidak berlaku!');
+        $tool->update(['permissions' => null]);
         $this->assertTrue(Gate::allows('delete', $item), 'toolman seharusnya boleh hapus');
         $tool->update(['permissions' => ['deny' => ['delete:AssetItem']]]);
         $this->assertFalse(Gate::allows('delete', $item), 'deny ACL tidak berlaku!');

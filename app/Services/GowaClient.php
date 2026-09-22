@@ -15,10 +15,41 @@ class GowaClient
     public static function fromSettings(): self
     {
         return new self(
-            (string) \App\Models\Setting::get('gowa_base_url', ''),
+            self::normalizeBase((string) \App\Models\Setting::get('gowa_base_url', '')),
             (string) \App\Models\Setting::get('gowa_user', '') ?: null,
             (string) \App\Models\Setting::get('gowa_pass', '') ?: null,
         );
+    }
+
+    /**
+     * Amankan base URL: hanya scheme://host:port, buang path
+     * yang tidak sengaja terketik (cth: ...:3000/se).
+     */
+    public static function normalizeBase(string $base): string
+    {
+        $base = trim($base);
+
+        if ($base === '') {
+            return '';
+        }
+
+        if (! preg_match('#^https?://#i', $base)) {
+            $base = 'http://'.$base;
+        }
+
+        $parts = parse_url($base);
+
+        if (empty($parts['host'])) {
+            return trim($base, '/');
+        }
+
+        $out = ($parts['scheme'] ?? 'http').'://'.$parts['host'];
+
+        if (! empty($parts['port'])) {
+            $out .= ':'.$parts['port'];
+        }
+
+        return $out;
     }
 
     public function url(string $path): string
@@ -48,19 +79,20 @@ class GowaClient
 
                 $data = $res->json() ?? [];
                 $ok = $res->successful() && ($data['ok'] ?? false);
+                $note = '[via relay '.rtrim($relay['url'], '/').'] ';
 
-                return ['ok' => $ok, 'status' => $res->status(), 'body' => mb_substr((string) ($data['body'] ?? $res->body()), 0, 500)];
+                return ['ok' => $ok, 'status' => $res->status(), 'body' => $note.mb_substr((string) ($data['body'] ?? $res->body()), 0, 400)];
             } catch (\Throwable $e) {
-                return ['ok' => false, 'status' => 0, 'body' => $e->getMessage()];
+                return ['ok' => false, 'status' => 0, 'body' => '[via relay] '.$e->getMessage()];
             }
         }
 
         try {
             $res = $this->client()->get($this->url('/app/devices'));
 
-            return ['ok' => $res->successful(), 'status' => $res->status(), 'body' => mb_substr((string) $res->body(), 0, 500)];
+            return ['ok' => $res->successful(), 'status' => $res->status(), 'body' => '[direct '.$this->baseUrl.'] '.mb_substr((string) $res->body(), 0, 400)];
         } catch (\Throwable $e) {
-            return ['ok' => false, 'status' => 0, 'body' => $e->getMessage()];
+            return ['ok' => false, 'status' => 0, 'body' => '[direct '.$this->baseUrl.'] '.$e->getMessage()];
         }
     }
 
@@ -78,9 +110,9 @@ class GowaClient
                 $data = $res->json() ?? [];
                 $ok = $res->successful() && ($data['ok'] ?? false);
 
-                return ['ok' => $ok, 'status' => $res->status(), 'body' => mb_substr((string) ($data['body'] ?? $res->body()), 0, 500)];
+                return ['ok' => $ok, 'status' => $res->status(), 'body' => '[via relay] '.mb_substr((string) ($data['body'] ?? $res->body()), 0, 400)];
             } catch (\Throwable $e) {
-                return ['ok' => false, 'status' => 0, 'body' => $e->getMessage()];
+                return ['ok' => false, 'status' => 0, 'body' => '[via relay] '.$e->getMessage()];
             }
         }
 
@@ -90,9 +122,9 @@ class GowaClient
                 'message' => $message,
             ]);
 
-            return ['ok' => $res->successful(), 'status' => $res->status(), 'body' => mb_substr((string) $res->body(), 0, 500)];
+            return ['ok' => $res->successful(), 'status' => $res->status(), 'body' => '[direct] '.mb_substr((string) $res->body(), 0, 400)];
         } catch (\Throwable $e) {
-            return ['ok' => false, 'status' => 0, 'body' => $e->getMessage()];
+            return ['ok' => false, 'status' => 0, 'body' => '[direct] '.$e->getMessage()];
         }
     }
 

@@ -12,14 +12,19 @@ class SendRecap extends Command
         {--send : kirim ke kanal aktif (default: tampilkan saja)}
         {--force : abaikan saklar recap_enabled}';
 
-    protected $description = 'Rekap alat belum kembali (pinjaman aktif)';
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->setDescription(__('recap.console_desc'));
+    }
 
     public function handle(): int
     {
         $items = RecapService::unreturned();
 
         if (! $this->option('send')) {
-            $this->info('Belum kembali: '.count($items).' unit');
+            $this->info(__('recap.console_list', ['count' => count($items)]));
             foreach ($items as $it) {
                 $this->line('- '.$it['qr'].' | '.$it['peminjam'].' ('.$it['kelas'].') | '.$it['hari'].' hari');
             }
@@ -28,13 +33,13 @@ class SendRecap extends Command
         }
 
         if (! Setting::boolean('recap_enabled', true) && ! $this->option('force')) {
-            $this->warn('Rekap otomatis nonaktif. Nyalakan di halaman Notifikasi atau pakai --force.');
+            $this->warn(__('recap.console_disabled'));
 
             return self::SUCCESS;
         }
 
         $result = RecapService::sendNow();
-        $this->info('Total: '.$result['total'].' unit');
+        $this->info(__('recap.console_total', ['total' => $result['total']]));
         foreach ($result['channels'] as $ch => $msg) {
             $this->line("[$ch] $msg");
         }

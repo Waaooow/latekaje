@@ -8,7 +8,10 @@ use Illuminate\Support\Carbon;
 
 class LoanActivityChart extends ChartWidget
 {
-    protected ?string $heading = 'Aktivitas Peminjaman (6 Bulan Terakhir)';
+    public function getHeading(): ?string
+    {
+        return __('dashboard.activity_heading');
+    }
 
     protected static ?int $sort = 5;
 

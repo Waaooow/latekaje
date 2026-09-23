@@ -14,7 +14,7 @@ class ListLocations extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Tambah Lokasi'),
+                ->label(__('locations.create_action')),
         ];
     }
 }

@@ -25,7 +25,7 @@ class DumpReviewTest extends TestCase
             '/admin/locations' => 'locations',
             '/admin/school-classes' => 'classes',
             '/admin/data-per-lokasi' => 'lokasi',
-            '/admin/notification-settings' => 'notif',
+            '/admin/setting' => 'notif',
         ];
         @mkdir('/tmp/review', 0777, true);
         foreach ($pages as $url => $name) {

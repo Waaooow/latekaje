@@ -12,7 +12,10 @@ class ActiveLoansTable extends BaseWidget
 
     protected int | string | array $columnSpan = 1;
 
-    protected static ?string $heading = 'Pinjaman Aktif Terkini';
+    protected function getTableHeading(): string | \Illuminate\Contracts\Support\Htmlable | null
+    {
+        return __('dashboard.active_heading');
+    }
 
     public function table(Table $table): Table
     {
@@ -25,17 +28,17 @@ class ActiveLoansTable extends BaseWidget
             )
             ->columns([
                 TextColumn::make('assetItem.nomor_seri_atau_qr')
-                    ->label('Kode QR')
+                    ->label(__('dashboard.col_qr'))
                     ->formatStateUsing(fn (?string $state): string => $state ?? '(unit dihapus)')
                     ->searchable(),
 
                 TextColumn::make('nama_siswa')
-                    ->label('Peminjam')
+                    ->label(__('dashboard.col_borrower'))
                     ->description(fn ($record) => $record->kelas)
                     ->searchable(),
 
                 TextColumn::make('tanggal_pinjam')
-                    ->label('Dipinjam')
+                    ->label(__('dashboard.col_borrowed_since'))
                     ->since()
                     ->sortable(),
             ])

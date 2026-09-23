@@ -26,24 +26,25 @@ class AssetItemsTable
     {
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['activeLoan', 'asset', 'location']))
-            ->defaultGroup(Group::make('asset.nama_alat')->label('Aset')->collapsible())
+            ->defaultGroup(Group::make('asset.nama_alat')->label(__('units.group_asset'))->collapsible())
             ->columns([
                 TextColumn::make('asset.nama_alat')
-                    ->label('Nama Alat')
+                    ->label(__('units.name_label'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('asset.kode_aset')
-                    ->label('Kode Aset')
+                    ->label(__('units.code_label'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('nomor_seri_atau_qr')
-                    ->label('Nomor Seri / QR')
+                    ->label(__('units.serial_label'))
                     ->searchable()
                     ->description(fn ($record): ?string => $record->asset?->spesifikasi),
 
                 TextColumn::make('status')
+                    ->label(__('units.status_label'))
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
                         'tersedia' => 'success',
@@ -52,6 +53,7 @@ class AssetItemsTable
                     }),
 
                 TextColumn::make('kondisi')
+                    ->label(__('units.condition_label'))
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
                         'baik' => 'success',
@@ -60,28 +62,28 @@ class AssetItemsTable
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'baik' => 'Baik',
-                        'rusak' => 'Rusak',
-                        'rusak_total' => 'Rusak Total',
+                        'baik' => __('units.condition_good'),
+                        'rusak' => __('units.condition_damaged'),
+                        'rusak_total' => __('units.condition_total_loss'),
                         default => (string) $state,
                     }),
 
                 TextColumn::make('activeLoan.nama_siswa')
-                    ->label('Dipinjam Oleh')
+                    ->label(__('units.borrowed_by_label'))
                     ->placeholder('—')
                     ->description(fn ($record): ?string => $record->activeLoan?->kelas),
 
                 TextColumn::make('location.label')
-                    ->label('Lokasi')
+                    ->label(__('units.location_label'))
                     ->badge()
                     ->color('info'),
             ])
             ->headerActions([
                 ImportAction::make()
-                    ->label('Import')
+                    ->label(__('common.import'))
                     ->importer(AssetItemImporter::class),
                 Action::make('downloadTemplateCsv')
-                    ->label('Template CSV')
+                    ->label(__('common.template_csv'))
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('gray')
                     ->action(function () {
@@ -111,10 +113,10 @@ class AssetItemsTable
                         }, 'template-import-unit.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
                     }),
                 ExportAction::make()
-                    ->label('Unduh Excel')
+                    ->label(__('units.download_excel'))
                     ->exporter(AssetItemExporter::class),
                 Action::make('printAllQr')
-                    ->label('Cetak Semua QR')
+                    ->label(__('units.print_all_qr'))
                     ->icon('heroicon-o-qr-code')
                     ->url(fn (): string => route('print.qr', ['ids' => 'all']))
                     ->openUrlInNewTab(),
@@ -122,35 +124,35 @@ class AssetItemsTable
             ->recordActions([
                 ActionGroup::make([
                     EditAction::make()
-                        ->label('Ubah'),
+                        ->label(__('common.edit')),
                     DeleteAction::make()
-                        ->label('Hapus'),
+                        ->label(__('common.delete')),
                     Action::make('printQr')
-                        ->label('Cetak QR')
+                        ->label(__('units.print_qr'))
                         ->icon('heroicon-o-qr-code')
                         ->url(fn ($record): string => route('print.qr', ['ids' => $record->getKey()]))
                         ->openUrlInNewTab(),
                 ])
-                    ->label('Aksi')
+                    ->label(__('units.actions_label'))
                     ->icon('heroicon-o-ellipsis-horizontal'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                    ->label('Hapus'),
+                    ->label(__('common.delete')),
                     BulkAction::make('printBulkQr')
-                        ->label('Cetak QR Terpilih')
+                        ->label(__('units.print_selected_qr'))
                         ->icon('heroicon-o-qr-code')
                         ->action(fn (Collection $records) => redirect()->away(
                             route('print.qr', ['ids' => $records->pluck('id')->implode(',')])
                         ))
                         ->deselectRecordsAfterCompletion(),
                     BulkAction::make('pindahRuanganMassal')
-                        ->label('Pindah Ruangan')
+                        ->label(__('units.move_room'))
                         ->icon('heroicon-o-map-pin')
                         ->form([
                             Select::make('location_id')
-                                ->label('Lokasi Tujuan')
+                                ->label(__('units.target_location_label'))
                                 ->relationship('location', 'label')
                                 ->required(),
                         ])

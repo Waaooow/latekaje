@@ -111,4 +111,8 @@ return [
     'val_qr_mismatch' => 'QR tidak cocok dengan alat yang dipinjam.',
     'val_pin_wrong' => 'PIN pengembalian salah. Minta PIN ke peminjam atau petugas.',
     'val_returner_required' => 'Nama pengembali wajib diisi.',
+    'login_nis_label' => 'NIS / Email',
+    'login_nis_placeholder' => 'cth: 1001 atau nama@email.com',
+    'ws_toast_return' => 'Kembali: :borrower — :code',
+    'ws_toast_borrow' => 'Pinjam: :borrower (:kelas) — :code',
 ];

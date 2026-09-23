@@ -19,7 +19,7 @@ class AssetItemForm
     {
         return $schema->components([
             Select::make('asset_id')
-                ->label('Aset')
+                ->label(__('units.asset_label'))
                 ->relationship('asset', 'nama_alat')
                 ->searchable(['kode_aset', 'nama_alat'])
                 ->getOptionLabelFromRecordUsing(fn (Asset $record): string => "[{$record->kode_aset}] {$record->nama_alat}")
@@ -27,7 +27,7 @@ class AssetItemForm
                 ->required(),
 
             TextInput::make('nomor_seri_atau_qr')
-                ->label('Nomor Seri / QR')
+                ->label(__('units.serial_label'))
                 ->required()
                 ->unique(ignoreRecord: true)
                 ->maxLength(255)
@@ -40,35 +40,35 @@ class AssetItemForm
                 ),
 
             TextInput::make('jumlah')
-                ->label('Jumlah Unit Dibuat')
+                ->label(__('units.qty_created_label'))
                 ->numeric()
                 ->default(1)
                 ->minValue(1)
                 ->maxValue(500)
                 ->required()
-                ->helperText('Isi > 1 untuk membuat banyak unit sekaligus. Kode sisanya digenerate otomatis.')
+                ->helperText(__('units.qty_created_helper'))
                 ->hiddenOn('edit'),
 
             Textarea::make('sn_manual')
-                ->label('SN Manual (opsional)')
+                ->label(__('units.sn_manual_label'))
                 ->rows(3)
-                ->placeholder("Satu SN per baris, misal:\nSN-PC-001\nSN-PC-002")
-                ->helperText('Kosongkan bila unit tidak punya SN — sistem generate kode otomatis.')
+                ->placeholder(__('units.sn_manual_placeholder'))
+                ->helperText(__('units.sn_manual_helper'))
                 ->hiddenOn('edit'),
 
             Select::make('status')
                 ->options([
-                    'tersedia' => 'Tersedia',
-                    'dipinjam' => 'Dipinjam',
+                    'tersedia' => __('units.status_available'),
+                    'dipinjam' => __('units.status_borrowed'),
                 ])
                 ->default('tersedia')
                 ->required(),
 
             Select::make('kondisi')
                 ->options([
-                    'baik' => 'Baik',
-                    'rusak' => 'Rusak',
-                    'rusak_total' => 'Rusak Total',
+                    'baik' => __('units.condition_good'),
+                    'rusak' => __('units.condition_damaged'),
+                    'rusak_total' => __('units.condition_total_loss'),
                 ])
                 ->default('baik')
                 ->required()
@@ -84,7 +84,7 @@ class AssetItemForm
                 }),
 
             Select::make('location_id')
-                ->label('Lokasi Penempatan')
+                ->label(__('units.placement_label'))
                 ->relationship('location', 'label')
                 ->required()
                 ->preload()

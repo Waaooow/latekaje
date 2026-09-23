@@ -30,22 +30,22 @@ class InventoryOverview extends StatsOverviewWidget
             ->count();
 
         return [
-            Stat::make('Total Unit', number_format($total))
-                ->description('Seluruh unit terdaftar')
+            Stat::make(__('dashboard.total_units'), number_format($total))
+                ->description(__('dashboard.total_units_desc'))
                 ->icon('heroicon-o-archive-box'),
 
-            Stat::make('Siap Pakai', number_format($siapPakai))
-                ->description('Tersedia + kondisi baik')
+            Stat::make(__('dashboard.ready'), number_format($siapPakai))
+                ->description(__('dashboard.ready_desc'))
                 ->color('success')
                 ->icon('heroicon-o-check-circle'),
 
-            Stat::make('Dipinjam', number_format($dipinjam))
-                ->description('Sedang dipinjam siswa')
+            Stat::make(__('dashboard.borrowed'), number_format($dipinjam))
+                ->description(__('dashboard.borrowed_desc'))
                 ->color('warning')
                 ->icon('heroicon-o-clipboard-document-list'),
 
-            Stat::make('Karantina', number_format($karantina))
-                ->description('Rusak + rusak total')
+            Stat::make(__('dashboard.quarantine'), number_format($karantina))
+                ->description(__('dashboard.quarantine_desc'))
                 ->color('danger')
                 ->icon('heroicon-o-wrench'),
         ];

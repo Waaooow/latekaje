@@ -11,8 +11,8 @@ class Login extends BaseLogin
     protected function getEmailFormComponent(): Component
     {
         return TextInput::make('email')
-            ->label('NIS / Email')
-            ->placeholder('cth: 1001 atau nama@email.com')
+            ->label(__('loans.login_nis_label'))
+            ->placeholder(__('loans.login_nis_placeholder'))
             ->required()
             ->autocomplete()
             ->autofocus();

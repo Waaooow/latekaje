@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // 🟢 Menerima semua proxy (termasuk Cloudflare) agar request HTTP lokal diterjemahkan sebagai HTTPS resmi publik
         $middleware->trustProxies(at: '*');
+        // 🌐 Bahasa aplikasi mengikuti Setting app_locale (id/en)
+        $middleware->append(\App\Http\Middleware\SetLocale::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

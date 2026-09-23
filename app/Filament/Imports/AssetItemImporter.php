@@ -153,10 +153,10 @@ class AssetItemImporter extends Importer
 
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Impor data unit selesai: ' . number_format($import->successful_rows) . ' baris berhasil';
+        $body = __('units.import_completed', ['success' => number_format($import->successful_rows)]);
 
         if ($failed = $import->getFailedRowsCount()) {
-            $body .= ', ' . number_format($failed) . ' baris gagal';
+            $body .= __('units.import_failed_suffix', ['failed' => number_format($failed)]);
         }
 
         return $body . '.';

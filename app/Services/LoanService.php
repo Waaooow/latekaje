@@ -21,7 +21,7 @@ class LoanService
             $pin = self::newPin();
         } elseif (! preg_match('/^[0-9]{6}$/', $pin)) {
             throw ValidationException::withMessages([
-                'return_pin' => 'PIN harus 6 digit angka.',
+                'return_pin' => __('loans.val_pin_format'),
             ]);
         }
 
@@ -31,13 +31,13 @@ class LoanService
 
             if ($item->status === 'dipinjam' || $item->activeLoan()->exists()) {
                 throw ValidationException::withMessages([
-                    'asset_item_id' => 'Alat sedang dipinjam.',
+                    'asset_item_id' => __('loans.val_borrowed'),
                 ]);
             }
 
             if ($item->kondisi !== 'baik') {
                 throw ValidationException::withMessages([
-                    'asset_item_id' => 'Kondisi tidak layak (rusak).',
+                    'asset_item_id' => __('loans.val_damaged'),
                 ]);
             }
 
@@ -75,7 +75,7 @@ class LoanService
 
             if ($lockedLoan->status !== 'aktif') {
                 throw ValidationException::withMessages([
-                    'qr' => 'Peminjaman ini sudah ditutup sebelumnya.',
+                    'qr' => __('loans.val_closed'),
                 ]);
             }
 
@@ -86,19 +86,19 @@ class LoanService
 
             if (! $item) {
                 throw ValidationException::withMessages([
-                    'qr' => 'Unit fisik peminjaman ini sudah dihapus dari inventaris.',
+                    'qr' => __('loans.val_unit_deleted'),
                 ]);
             }
 
             if (trim($item->nomor_seri_atau_qr) !== trim((string) ($payload['qr'] ?? ''))) {
                 throw ValidationException::withMessages([
-                    'qr' => 'QR tidak cocok dengan alat yang dipinjam.',
+                    'qr' => __('loans.val_qr_mismatch'),
                 ]);
             }
 
             if ($lockedLoan->return_pin && trim((string) ($payload['pin'] ?? '')) !== $lockedLoan->return_pin) {
                 throw ValidationException::withMessages([
-                    'pin' => 'PIN pengembalian salah. Minta PIN ke peminjam atau petugas.',
+                    'pin' => __('loans.val_pin_wrong'),
                 ]);
             }
 
@@ -106,7 +106,7 @@ class LoanService
 
             if ($returnedBy === '') {
                 throw ValidationException::withMessages([
-                    'returned_by' => 'Nama pengembali wajib diisi.',
+                    'returned_by' => __('loans.val_returner_required'),
                 ]);
             }
 

@@ -13,7 +13,10 @@ class AttentionUnitsTable extends BaseWidget
 
     protected int | string | array $columnSpan = 1;
 
-    protected static ?string $heading = 'Unit Perlu Perhatian';
+    protected function getTableHeading(): string | \Illuminate\Contracts\Support\Htmlable | null
+    {
+        return __('dashboard.attention_heading');
+    }
 
     public function table(Table $table): Table
     {
@@ -26,21 +29,21 @@ class AttentionUnitsTable extends BaseWidget
             )
             ->columns([
                 TextColumn::make('nomor_seri_atau_qr')
-                    ->label('Kode QR')
+                    ->label(__('dashboard.col_qr'))
                     ->searchable(),
 
                 TextColumn::make('asset.nama_alat')
-                    ->label('Alat')
+                    ->label(__('dashboard.col_tool'))
                     ->searchable(),
 
                 TextColumn::make('kondisi')
-                    ->label('Kondisi')
+                    ->label(__('dashboard.col_condition'))
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => $state === 'rusak' ? 'Rusak' : 'Rusak Total')
+                    ->formatStateUsing(fn (string $state): string => $state === 'rusak' ? __('dashboard.cond_damaged') : __('dashboard.cond_total_loss'))
                     ->color(fn (string $state): string => $state === 'rusak' ? 'warning' : 'danger'),
 
                 TextColumn::make('location.label')
-                    ->label('Lokasi')
+                    ->label(__('dashboard.col_location'))
                     ->badge()
                     ->color('gray'),
             ])

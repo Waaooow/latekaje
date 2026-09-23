@@ -20,11 +20,20 @@ class AssetItemResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQrCode;
 
-    protected static ?string $navigationLabel = 'Data Unit/QR';
+    public static function getNavigationLabel(): string
+    {
+        return __('common.nav_units');
+    }
 
-    protected static ?string $modelLabel = 'Data Unit';
+    public static function getModelLabel(): string
+    {
+        return __('units.model_label');
+    }
 
-    protected static ?string $pluralModelLabel = 'Data Unit';
+    public static function getPluralModelLabel(): string
+    {
+        return __('units.model_plural');
+    }
 
     protected static ?string $recordTitleAttribute = 'nomor_seri_atau_qr';
 

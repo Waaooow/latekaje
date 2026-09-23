@@ -24,15 +24,24 @@ class StudentResource extends Resource
 {
     protected static ?string $model = Student::class;
 
-    protected static ?string $navigationLabel = 'Siswa';
+    public static function getNavigationLabel(): string
+    {
+        return __('students.model_label');
+    }
 
     protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedUsers;
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $modelLabel = 'Siswa';
+    public static function getModelLabel(): string
+    {
+        return __('students.model_label');
+    }
 
-    protected static ?string $pluralModelLabel = 'Siswa';
+    public static function getPluralModelLabel(): string
+    {
+        return __('students.model_plural');
+    }
 
     protected static ?string $recordTitleAttribute = 'nama';
 
@@ -40,21 +49,21 @@ class StudentResource extends Resource
     {
         return $schema->components([
             TextInput::make('nis')
-                ->label('NIS')
+                ->label(__('students.nis_label'))
                 ->unique(ignoreRecord: true)
                 ->maxLength(64)
-                ->placeholder('cth: 1001 (boleh kosong)'),
+                ->placeholder(__('students.nis_placeholder')),
 
             TextInput::make('nama')
-                ->label('Nama Lengkap')
+                ->label(__('students.full_name_label'))
                 ->required()
                 ->maxLength(255),
 
             TextInput::make('kelas')
-                ->label('Kelas')
+                ->label(__('students.class_label'))
                 ->required()
                 ->maxLength(255)
-                ->placeholder('cth: X TJKT 1'),
+                ->placeholder(__('students.class_placeholder')),
         ]);
     }
 
@@ -63,36 +72,36 @@ class StudentResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('nis')
-                    ->label('NIS')
+                    ->label(__('students.nis_label'))
                     ->badge()
                     ->copyable()
                     ->searchable()
                     ->placeholder('-'),
 
                 TextColumn::make('nama')
-                    ->label('Nama')
+                    ->label(__('students.name_label'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('kelas')
-                    ->label('Kelas')
+                    ->label(__('students.class_label'))
                     ->badge()
                     ->searchable()
                     ->sortable(),
 
                 IconColumn::make('aktif')
-                    ->label('Aktif')
+                    ->label(__('students.active_label'))
                     ->boolean(),
 
                 TextColumn::make('loans_count')
-                    ->label('Pinjam')
+                    ->label(__('students.loans_label'))
                     ->counts('loans')
                     ->badge()
                     ->sortable(),
             ])
             ->actions([
                 Action::make('buatAkun')
-                    ->label('Buat Akun')
+                    ->label(__('students.create_account'))
                     ->icon('heroicon-o-key')
                     ->color('info')
                     ->visible(fn ($record): bool => filled($record->nis) && ! User::where('nis', $record->nis)->where('role', 'siswa')->exists())
@@ -108,14 +117,14 @@ class StudentResource extends Resource
                         );
 
                         Notification::make()
-                            ->title('Akun login dibuat')
-                            ->body('NIS: '.$user->nis.' | Password awal: NIS-nya. Minta siswa ganti di Profil.')
+                            ->title(__('students.account_created_title'))
+                            ->body(__('students.account_created_body', ['nis' => $user->nis]))
                             ->success()
                             ->persistent()
                             ->send();
                     }),
-                EditAction::make()->label('Ubah'),
-                DeleteAction::make()->label('Hapus'),
+                EditAction::make()->label(__('common.edit')),
+                DeleteAction::make()->label(__('common.delete')),
             ]);
     }
 

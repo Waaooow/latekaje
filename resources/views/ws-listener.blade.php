@@ -36,8 +36,8 @@
                 } catch (err) {}
 
                 var msg = e.kind === 'return'
-                    ? 'Kembali: ' + e.borrower + ' — ' + e.itemCode
-                    : 'Pinjam: ' + e.borrower + ' (' + e.kelas + ') — ' + e.itemCode;
+                    ? @json(__('loans.ws_toast_return')).replace(':borrower', e.borrower).replace(':code', e.itemCode)
+                    : @json(__('loans.ws_toast_borrow')).replace(':borrower', e.borrower).replace(':kelas', e.kelas).replace(':code', e.itemCode);
                 toast(msg);
             });
         } catch (err) {}

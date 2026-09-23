@@ -12,7 +12,7 @@ class EditStudent extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [DeleteAction::make()->label('Hapus')];
+        return [DeleteAction::make()->label(__('common.delete'))];
     }
 
     protected function getRedirectUrl(): string

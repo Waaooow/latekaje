@@ -16,12 +16,12 @@ class ListStudents extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Tambah Siswa'),
+            CreateAction::make()->label(__('students.create_action')),
             ImportAction::make()
                 ->importer(StudentImporter::class)
-                ->label('Import'),
+                ->label(__('common.import')),
             Action::make('downloadTemplateCsv')
-                ->label('Template CSV')
+                ->label(__('common.template_csv'))
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->action(function () {

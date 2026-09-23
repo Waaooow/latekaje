@@ -29,7 +29,7 @@ class AssetItemService
 
         if (count($serials) > $qty) {
             throw ValidationException::withMessages([
-                'sn_manual' => 'Jumlah SN manual ('.count($serials).') melebihi jumlah unit ('.$qty.').',
+                'sn_manual' => __('units.sn_manual_too_many', ['count' => count($serials), 'qty' => $qty]),
             ]);
         }
 
@@ -72,7 +72,7 @@ class AssetItemService
 
                 if ($manualSerial && $tries === 0) {
                     throw ValidationException::withMessages([
-                        'sn_manual' => "SN '{$manualSerial}' sudah terdaftar di sistem.",
+                        'sn_manual' => __('units.sn_duplicate', ['serial' => $manualSerial]),
                     ]);
                 }
 

@@ -88,6 +88,7 @@ Filter role, kolom NIS + data siswa tertaut, ubah password, toggle
 (izinkan/larang 20 hak individual yang menimpa role — khusus superadmin).
 
 ### Setting (khusus superadmin/toolman)
+- **Bahasa Aplikasi:** Indonesia / English — berlaku global, tersimpan di database.
 - **Aplikasi:** Mode Perawatan (dengan modal konfirmasi, superadmin tetap bisa masuk).
 - **API:** buat/cabut token Sanctum (Bearer) untuk integrasi luar.
 - **Notifikasi:** GOWA WhatsApp (direct / via relay bila server tak sejaringan),
@@ -172,7 +173,7 @@ Yang wajib diperhatikan (selengkapnya lihat `.env.example`):
 
 ```env
 APP_URL=https://domain-anda          # HARUS https publik di produksi
-APP_LOCALE=id
+APP_LOCALE=id                        # default; bisa diganti per-user lewat Setting → Bahasa
 DB_CONNECTION=mysql
 DB_DATABASE=latekaje
 DB_PREFIX=                           # kosongkan bila DB khusus app ini

@@ -15,11 +15,17 @@ class NotificationSettings extends Page
 {
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-bell';
 
-    protected static ?string $navigationLabel = 'Setting';
+    public static function getNavigationLabel(): string
+    {
+        return __('settings.nav_label');
+    }
 
     protected static ?string $slug = 'setting';
 
-    protected static ?string $title = 'Notifikasi';
+    public function getTitle(): string | \Illuminate\Contracts\Support\Htmlable
+    {
+        return __('settings.title');
+    }
 
     protected static ?int $navigationSort = 7;
 
@@ -45,6 +51,7 @@ class NotificationSettings extends Page
         abort_unless(self::canAccess(), 403);
 
         $this->form = [
+            'app_locale' => Setting::get('app_locale', config('app.locale', 'id')),
             'recap_enabled' => Setting::boolean('recap_enabled', true),
             'recap_time' => Setting::get('recap_time', '16:00'),
             'gowa_enabled' => Setting::boolean('gowa_enabled', false),
@@ -67,11 +74,17 @@ class NotificationSettings extends Page
     {
         abort_unless(self::canAccess(), 403);
 
+        if (isset($this->form['app_locale']) && ! in_array($this->form['app_locale'], \App\Http\Middleware\SetLocale::SUPPORTED, true)) {
+            $this->form['app_locale'] = config('app.locale', 'id');
+        }
+
         foreach ($this->form as $key => $value) {
             Setting::set($key, is_bool($value) ? ($value ? '1' : '0') : $value);
         }
 
-        Notification::make()->title('Pengaturan disimpan')->success()->send();
+        app()->setLocale(\App\Http\Middleware\SetLocale::resolve());
+
+        Notification::make()->title(__('settings.saved'))->success()->send();
     }
 
     public function testGowa(): void
@@ -81,11 +94,11 @@ class NotificationSettings extends Page
 
         $res = GowaClient::fromSettings()->devices();
         $this->gowaTest = $res['ok']
-            ? 'Terhubung! (HTTP '.$res['status'].')'
-            : 'Gagal: '.$res['body'];
+            ? __('settings.gowa_connected', ['status' => $res['status']])
+            : __('settings.gowa_failed', ['body' => $res['body']]);
 
         Notification::make()
-            ->title($res['ok'] ? 'GOWA terhubung' : 'GOWA gagal')
+            ->title($res['ok'] ? __('settings.gowa_ok_title') : __('settings.gowa_fail_title'))
             ->body(mb_substr($res['body'], 0, 200))
             ->{ $res['ok'] ? 'success' : 'danger' }()
             ->send();
@@ -99,20 +112,20 @@ class NotificationSettings extends Page
         $target = trim($this->testTarget) !== '' ? trim($this->testTarget) : (string) Setting::get('gowa_target', '');
 
         if ($target === '') {
-            $this->gowaTest = 'Isi Nomor Tes dulu.';
+            $this->gowaTest = __('settings.fill_test_number');
             return;
         }
 
         $res = GowaClient::fromSettings()->sendMessage(
             $target,
-            'Tes LATEKAJE OK — '.now()->format('d M Y H:i').'. Balas pesan ini bila diterima.'
+            __('settings.test_wa_body', ['time' => now()->format('d M Y H:i')])
         );
         $this->gowaTest = $res['ok']
-            ? 'Pesan tes terkirim ke '.$target.'! (HTTP '.$res['status'].')'
-            : 'Gagal kirim ke '.$target.': '.$res['body'];
+            ? __('settings.test_sent_to', ['target' => $target, 'status' => $res['status']])
+            : __('settings.test_send_fail', ['target' => $target, 'body' => $res['body']]);
 
         Notification::make()
-            ->title($res['ok'] ? 'Pesan tes terkirim' : 'Pesan tes gagal')
+            ->title($res['ok'] ? __('settings.test_sent_title') : __('settings.test_failed_title'))
             ->body(mb_substr($this->gowaTest, 0, 200))
             ->{ $res['ok'] ? 'success' : 'danger' }()
             ->send();
@@ -125,14 +138,14 @@ class NotificationSettings extends Page
 
         $url = (string) Setting::get('webhook_url', '');
         if ($url === '') {
-            $this->webhookTest = 'Isi webhook URL dulu.';
+            $this->webhookTest = __('settings.fill_webhook');
             return;
         }
 
-        $res = WebhookClient::post($url, ['event' => 'recap.test', 'message' => 'Tes koneksi webhook LATEKAJE']);
+        $res = WebhookClient::post($url, ['event' => 'recap.test', 'message' => __('settings.webhook_test_message')]);
         $this->webhookTest = $res['ok']
-            ? 'Terkirim! (HTTP '.$res['status'].')'
-            : 'Gagal (HTTP '.$res['status'].'): '.$res['body'];
+            ? __('settings.webhook_sent', ['status' => $res['status']])
+            : __('settings.webhook_failed', ['status' => $res['status'], 'body' => $res['body']]);
     }
 
     public string $apiTest = '';
@@ -148,11 +161,11 @@ class NotificationSettings extends Page
         if (app()->isDownForMaintenance()) {
             \Illuminate\Support\Facades\Artisan::call('up');
 
-            Notification::make()->title('Mode perawatan MATI — aplikasi live')->success()->send();
+            Notification::make()->title(__('settings.maintenance_off'))->success()->send();
         } else {
             \Illuminate\Support\Facades\Artisan::call('down', ['--render' => 'errors::503']);
 
-            Notification::make()->title('Mode perawatan NYALA — hanya superadmin bisa buka')->warning()->persistent()->send();
+            Notification::make()->title(__('settings.maintenance_on'))->warning()->persistent()->send();
         }
     }
 
@@ -163,7 +176,7 @@ class NotificationSettings extends Page
         $name = trim($this->newTokenName);
 
         if ($name === '') {
-            Notification::make()->title('Isi nama token dulu')->danger()->send();
+            Notification::make()->title(__('settings.token_name_required'))->danger()->send();
 
             return;
         }
@@ -172,7 +185,7 @@ class NotificationSettings extends Page
         $this->newTokenPlain = $token->plainTextToken;
         $this->newTokenName = '';
 
-        Notification::make()->title('Token dibuat — salin sekarang, hanya tampil sekali')->success()->persistent()->send();
+        Notification::make()->title(__('settings.token_created'))->success()->persistent()->send();
     }
 
     public function revokeApiToken(int $id): void
@@ -181,7 +194,7 @@ class NotificationSettings extends Page
 
         auth()->user()->tokens()->whereKey($id)->delete();
 
-        Notification::make()->title('Token dicabut')->success()->send();
+        Notification::make()->title(__('settings.token_revoked'))->success()->send();
     }
 
     public function sendNow(): void
@@ -191,7 +204,7 @@ class NotificationSettings extends Page
         $result = RecapService::sendNow();
 
         Notification::make()
-            ->title('Rekap dikirim ('.$result['total'].' unit)')
+            ->title(__('recap.sent_title', ['total' => $result['total']]))
             ->body(implode(' | ', array_map(fn ($k, $v) => "[$k] $v", array_keys($result['channels']), $result['channels'])))
             ->success()
             ->send();

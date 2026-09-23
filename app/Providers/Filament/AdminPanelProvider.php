@@ -58,7 +58,24 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn (): string => <<<'HTML'
+                function (): string {
+                    $scan = json_encode([
+                        'preparing' => __('scanner.preparing'),
+                        'https_required' => __('scanner.https_required'),
+                        'lib_failed' => __('scanner.lib_failed'),
+                        'permission_denied' => __('scanner.permission_denied'),
+                        'no_camera' => __('scanner.no_camera'),
+                        'init_failed' => __('scanner.init_failed'),
+                        'opening' => __('scanner.opening'),
+                        'aim' => __('scanner.aim'),
+                        'cam_fail' => __('scanner.cam_fail'),
+                        'detected_ok' => __('scanner.detected_ok'),
+                        'detected_noform' => __('scanner.detected_noform'),
+                        'stopped' => __('scanner.stopped'),
+                    ], JSON_UNESCAPED_UNICODE);
+
+                    return '<script>window.LATEKAJE_SCAN=' . $scan . ';</script>'
+                        . <<<'HTML'
                     <link rel="stylesheet" href="/css/latekaje.css?v=1" />
                     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
                     <style>
@@ -87,7 +104,7 @@ class AdminPanelProvider extends PanelProvider
                             scanner: null,
                             cameras: [],
                             cameraId: '',
-                            status: 'Menyiapkan kamera…',
+                            status: LATEKAJE_SCAN.preparing,
                             error: '',
                             locked: false,
                             observer: null,
@@ -104,14 +121,14 @@ class AdminPanelProvider extends PanelProvider
                                 if (el) el.innerHTML = '';
                                 if (!window.isSecureContext) {
                                     this.status = '';
-                                    this.error = 'Akses kamera membutuhkan HTTPS. Buka aplikasi lewat alamat https://';
+                                    this.error = LATEKAJE_SCAN.https_required;
                                     return;
                                 }
                                 try {
                                     await window.latekajeQr.ensureLib();
                                 } catch (e) {
                                     this.status = '';
-                                    this.error = 'Library scanner gagal dimuat. Periksa koneksi internet lalu tekan Scan Ulang.';
+                                    this.error = LATEKAJE_SCAN.lib_failed;
                                     return;
                                 }
                                 if (!alive()) return;
@@ -120,13 +137,13 @@ class AdminPanelProvider extends PanelProvider
                                     cams = await Html5Qrcode.getCameras();
                                 } catch (e) {
                                     this.status = '';
-                                    this.error = 'Izin kamera ditolak atau tidak ada kamera. Izinkan akses kamera di browser (ikon kamera di address bar), lalu tekan Scan Ulang.';
+                                    this.error = LATEKAJE_SCAN.permission_denied;
                                     return;
                                 }
                                 if (!alive()) return;
                                 if (!cams || !cams.length) {
                                     this.status = '';
-                                    this.error = 'Tidak ada kamera yang ditemukan di perangkat ini. Ketik kode manual.';
+                                    this.error = LATEKAJE_SCAN.no_camera;
                                     return;
                                 }
                                 this.cameras = cams;
@@ -139,14 +156,14 @@ class AdminPanelProvider extends PanelProvider
                                 const gen = this._gen;
                                 this.error = '';
                                 this.locked = false;
-                                this.status = 'Membuka kamera…';
+                                this.status = LATEKAJE_SCAN.opening;
                                 const elw = document.getElementById(readerId);
                                 const box = Math.max(160, Math.min(250, (elw ? elw.clientWidth : 300) - 32));
                                 try {
                                     this.scanner = new Html5Qrcode(readerId);
                                 } catch (e) {
                                     this.status = '';
-                                    this.error = 'Scanner gagal diinisialisasi.';
+                                    this.error = LATEKAJE_SCAN.init_failed;
                                     return;
                                 }
                                 try {
@@ -157,11 +174,11 @@ class AdminPanelProvider extends PanelProvider
                                         () => {}
                                     );
                                     if (gen !== this._gen) { await this.stopQuiet(); return; }
-                                    this.status = 'Arahkan QR alat ke kamera…';
+                                    this.status = LATEKAJE_SCAN.aim;
                                 } catch (e) {
                                     if (gen !== this._gen) return;
                                     this.status = '';
-                                    this.error = 'Kamera tidak bisa dibuka (' + ((e && e.message) || e) + ').';
+                                    this.error = LATEKAJE_SCAN.cam_fail.replace(':msg', ((e && e.message) || e));
                                 }
                             },
                             async restart() { await this.stopQuiet(); await this.start(); },
@@ -178,10 +195,10 @@ class AdminPanelProvider extends PanelProvider
                                 }
                                 await this.stopQuiet();
                                 this.status = input
-                                    ? 'Terdeteksi: ' + txt + ' — sudah mengisi form, silakan lanjutkan.'
-                                    : 'Terdeteksi: ' + txt + ' — form tidak ditemukan!';
+                                    ? LATEKAJE_SCAN.detected_ok.replace(':code', txt)
+                                    : LATEKAJE_SCAN.detected_noform.replace(':code', txt);
                             },
-                            async stop() { await this.stopQuiet(); this.status = 'Kamera dimatikan.'; },
+                            async stop() { await this.stopQuiet(); this.status = LATEKAJE_SCAN.stopped; },
                             async stopQuiet() {
                                 try { if (this.scanner) { await this.scanner.stop(); this.scanner.clear(); } } catch (e) {}
                                 this.scanner = null;
@@ -202,7 +219,8 @@ class AdminPanelProvider extends PanelProvider
                         };
                     }
                     </script>
-                    HTML,
+                    HTML;
+                }
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,

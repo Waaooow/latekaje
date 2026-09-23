@@ -53,12 +53,12 @@ class AssetsTable
                     ->label(__('assets.usage_label'))
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'praktik' => '🛠️ Praktik',
-                        'non_praktik' => '📋 Non Praktik',
-                        'Praktik Siswa' => '🎓 Praktik Siswa',
-                        'Praktik Guru' => '🧑‍🏫 Praktik Guru',
-                        'Ujian/CBT' => '💻 Ujian/CBT',
-                        'lainnya' => '✨ Lainnya',
+                        'praktik' => '🛠️ '.(__('assets.usage_option_practice')),
+                        'non_praktik' => '📋 '.(__('assets.usage_option_non_practice')),
+                        'Praktik Siswa' => '🎓 '.(__('assets.usage_option_student')),
+                        'Praktik Guru' => '🧑‍🏫 '.(__('assets.usage_option_teacher')),
+                        'Ujian/CBT' => '💻 '.(__('assets.usage_option_exam')),
+                        'lainnya' => '✨ '.(__('assets.usage_option_other')),
                         default => (string) $state,
                     }),
 
@@ -83,13 +83,13 @@ class AssetsTable
             ])
             ->actions([
                 Action::make('tambahUnit')
-                    ->label('Tambah Unit')
+                    ->label(__('assets.add_unit'))
                     ->icon('heroicon-o-plus-circle')
                     ->color('info')
-                    ->modalHeading(fn ($record) => 'Tambah Unit: '.$record->nama_alat)
+                    ->modalHeading(fn ($record) => __('assets.add_unit_heading', ['name' => $record->nama_alat]))
                     ->form([
                         TextInput::make('jumlah')
-                            ->label('Jumlah Unit')
+                            ->label(__('assets.qty_label'))
                             ->numeric()
                             ->default(1)
                             ->minValue(1)
@@ -97,26 +97,26 @@ class AssetsTable
                             ->required(),
 
                         Select::make('location_id')
-                            ->label('Lokasi Penempatan')
+                            ->label(__('assets.placement_label'))
                             ->options(fn () => Location::orderBy('label')->pluck('label', 'id'))
                             ->default(fn () => Location::where('key', 'gudang')->value('id'))
                             ->required(),
 
                         Select::make('kondisi')
-                            ->label('Kondisi Awal')
+                            ->label(__('assets.initial_condition_label'))
                             ->options([
-                                'baik' => 'Baik',
-                                'rusak' => 'Rusak',
-                                'rusak_total' => 'Rusak Total',
+                                'baik' => __('assets.condition_good'),
+                                'rusak' => __('assets.condition_damaged'),
+                                'rusak_total' => __('assets.condition_total_loss'),
                             ])
                             ->default('baik')
                             ->required(),
 
                         Textarea::make('sn_manual')
-                            ->label('SN Manual (opsional)')
+                            ->label(__('assets.sn_manual_label'))
                             ->rows(3)
-                            ->placeholder("Satu SN per baris. Sisanya digenerate otomatis.")
-                            ->helperText('Kosongkan bila unit tidak punya SN.'),
+                            ->placeholder(__('assets.sn_manual_placeholder'))
+                            ->helperText(__('assets.sn_manual_helper')),
                     ])
                     ->action(function ($record, array $data): void {
                         $serials = collect(preg_split('/\r\n|\r|\n/', (string) ($data['sn_manual'] ?? '')))
@@ -137,20 +137,20 @@ class AssetsTable
                         );
 
                         Notification::make()
-                            ->title($units->count().' unit ditambahkan ke '.$record->nama_alat)
-                            ->body('Kode: '.$units->first()->nomor_seri_atau_qr.' s/d '.$units->last()->nomor_seri_atau_qr)
+                            ->title(__('assets.units_added_title', ['count' => $units->count(), 'name' => $record->nama_alat]))
+                            ->body(__('assets.units_added_body', ['first' => $units->first()->nomor_seri_atau_qr, 'last' => $units->last()->nomor_seri_atau_qr]))
                             ->success()
                             ->send();
                     }),
                 EditAction::make()
-                    ->label('Ubah'),
+                    ->label(__('common.edit')),
                 DeleteAction::make()
-                    ->label('Hapus'),
+                    ->label(__('common.delete')),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                    ->label('Hapus'),
+                    ->label(__('common.delete')),
                 ]),
             ]);
     }

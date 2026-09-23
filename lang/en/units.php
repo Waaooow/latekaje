@@ -33,6 +33,10 @@ return [
     'print_all_qr' => 'Print All QR',
     'print_qr' => 'Print QR',
     'print_selected_qr' => 'Print Selected QR',
+    'print_title' => 'Print QR — LATEKAJE',
+    'print_button' => 'Print',
+    'print_default_tool' => 'Tool',
+    'print_empty' => 'No units to print.',
     'move_room' => 'Move Room',
     'target_location_label' => 'Target Location',
     'actions_label' => 'Actions',
@@ -62,6 +66,7 @@ return [
 
     // Validation (AssetItemService)
     'sn_manual_too_many' => 'Manual SN count (:count) exceeds unit quantity (:qty).',
+    'sn_duplicate' => 'SN :serial is already registered.',
     'sn_manual_duplicate' => "SN ':sn' is already registered in the system.",
 
     // Abilities

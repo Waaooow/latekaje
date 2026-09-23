@@ -16,7 +16,10 @@ class UnreturnedTable extends BaseWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected static ?string $heading = 'Belum Kembali (semua pinjaman aktif)';
+    protected function getTableHeading(): string | \Illuminate\Contracts\Support\Htmlable | null
+    {
+        return __('dashboard.unreturned_heading');
+    }
 
     public function table(Table $table): Table
     {
@@ -29,7 +32,7 @@ class UnreturnedTable extends BaseWidget
             )
             ->headerActions([
                 Action::make('kirimRekap')
-                    ->label('Kirim Rekap Sekarang')
+                    ->label(__('recap.send_now'))
                     ->icon('heroicon-o-paper-airplane')
                     ->color('info')
                     ->visible(fn (): bool => in_array(auth()->user()?->role, ['superadmin', 'toolman', 'anak_pkl'], true))
@@ -37,7 +40,7 @@ class UnreturnedTable extends BaseWidget
                         $result = RecapService::sendNow();
 
                         Notification::make()
-                            ->title('Rekap dikirim ('.$result['total'].' unit)')
+                            ->title(__('recap.sent_title', ['total' => $result['total']]))
                             ->body(implode(' | ', array_map(
                                 fn ($k, $v) => "[$k] $v",
                                 array_keys($result['channels']),
@@ -49,27 +52,27 @@ class UnreturnedTable extends BaseWidget
             ])
             ->columns([
                 TextColumn::make('assetItem.nomor_seri_atau_qr')
-                    ->label('Kode QR')
-                    ->formatStateUsing(fn (?string $state): string => $state ?? '(unit dihapus)')
+                    ->label(__('dashboard.col_qr'))
+                    ->formatStateUsing(fn (?string $state): string => $state ?? __('dashboard.unit_deleted'))
                     ->searchable(),
 
                 TextColumn::make('assetItem.asset.nama_alat')
-                    ->label('Alat')
+                    ->label(__('dashboard.col_tool'))
                     ->searchable(),
 
                 TextColumn::make('nama_siswa')
-                    ->label('Peminjam')
+                    ->label(__('dashboard.col_borrower'))
                     ->description(fn ($record) => $record->kelas)
                     ->searchable(),
 
                 TextColumn::make('lama_pinjam')
-                    ->label('Lama')
+                    ->label(__('dashboard.col_duration'))
                     ->badge()
                     ->color(fn ($record) => $record->tanggal_pinjam->diffInDays(now()) >= 7 ? 'danger' : ($record->tanggal_pinjam->diffInDays(now()) >= 3 ? 'warning' : 'gray'))
-                    ->state(fn ($record) => ($d = $record->tanggal_pinjam->diffInDays(now())) === 0 ? 'hari ini' : $d.' hari'),
+                    ->state(fn ($record) => ($d = $record->tanggal_pinjam->diffInDays(now())) === 0 ? __('dashboard.duration_today') : __('dashboard.duration_days', ['count' => $d])),
 
                 TextColumn::make('return_pin')
-                    ->label('PIN')
+                    ->label(__('dashboard.col_pin'))
                     ->badge()
                     ->color('info')
                     ->copyable()

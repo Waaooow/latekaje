@@ -15,6 +15,8 @@ class KioskTest extends TestCase
             ['email' => 'kiosk@latekaje.net'],
             ['name' => 'Kiosk Lab', 'password' => 'kiosk123', 'role' => 'siswa'],
         );
+        // Self-heal stale rows from earlier runs (firstOrCreate never overwrites).
+        $kiosk->forceFill(['password' => 'kiosk123', 'role' => 'siswa'])->save();
         $kiosk->update(['nis' => null, 'student_id' => null]);
 
         $this->assertTrue(Auth::attempt(['email' => 'kiosk@latekaje.net', 'password' => 'kiosk123']), 'login kiosk gagal');

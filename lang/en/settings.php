@@ -95,4 +95,11 @@ return [
     'th_status' => 'Status',
     'th_response' => 'Response',
     'empty_logs' => 'No deliveries yet.',
+    'language_heading' => 'Application Language',
+    'language_label' => 'Language',
+    'language_desc' => 'Applies to the entire application interface.',
+    'maintenance_confirm_off' => 'Maintenance mode will be turned off and the app will be available to all users. Continue?',
+    'maintenance_confirm_on' => 'The app will enter maintenance mode. All users except superadmin will be unable to access the app. Continue?',
+    'maintenance_yes_off' => 'Yes, Turn Off',
+    'maintenance_yes_on' => 'Yes, Turn On',
 ];

@@ -111,4 +111,8 @@ return [
     'val_qr_mismatch' => 'QR does not match the borrowed tool.',
     'val_pin_wrong' => 'Wrong return PIN. Ask the borrower or staff for the PIN.',
     'val_returner_required' => 'Returner name is required.',
+    'login_nis_label' => 'NIS / Email',
+    'login_nis_placeholder' => 'e.g. 1001 or name@email.com',
+    'ws_toast_return' => 'Returned: :borrower — :code',
+    'ws_toast_borrow' => 'Borrowed: :borrower (:kelas) — :code',
 ];

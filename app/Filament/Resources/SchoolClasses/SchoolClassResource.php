@@ -20,13 +20,22 @@ class SchoolClassResource extends Resource
 {
     protected static ?string $model = SchoolClass::class;
 
-    protected static ?string $modelLabel = 'Kelas';
+    public static function getModelLabel(): string
+    {
+        return __('classes.model_label');
+    }
 
-    protected static ?string $pluralModelLabel = 'Kelas';
+    public static function getPluralModelLabel(): string
+    {
+        return __('classes.model_plural');
+    }
 
     protected static ?string $recordTitleAttribute = 'label';
 
-    protected static ?string $navigationLabel = 'Kelas';
+    public static function getNavigationLabel(): string
+    {
+        return __('classes.model_label');
+    }
 
     protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedAcademicCap;
 
@@ -36,18 +45,18 @@ class SchoolClassResource extends Resource
     {
         return $schema->components([
             TextInput::make('key')
-                ->label('Kode')
+                ->label(__('classes.code_label'))
                 ->required()
                 ->unique(ignoreRecord: true)
                 ->alphaDash()
                 ->maxLength(64)
-                ->placeholder('cth: x_tjkt_1, tamu_eksternal'),
+                ->placeholder(__('classes.code_placeholder')),
 
             TextInput::make('label')
-                ->label('Nama Tampil')
+                ->label(__('classes.display_name_label'))
                 ->required()
                 ->maxLength(255)
-                ->placeholder('cth: X TJKT 1, Tamu / Eksternal'),
+                ->placeholder(__('classes.display_name_placeholder')),
         ]);
     }
 
@@ -56,27 +65,27 @@ class SchoolClassResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('label')
-                    ->label('Kelas')
+                    ->label(__('classes.class_label'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('key')
-                    ->label('Kode')
+                    ->label(__('classes.code_column'))
                     ->badge()
                     ->copyable()
                     ->toggleable(),
 
                 TextColumn::make('loans_count')
-                    ->label('Total Pinjam')
+                    ->label(__('classes.total_loans_label'))
                     ->counts('loans')
                     ->badge()
                     ->sortable(),
             ])
             ->actions([
                 EditAction::make()
-                    ->label('Ubah'),
+                    ->label(__('common.edit')),
                 DeleteAction::make()
-                    ->label('Hapus'),
+                    ->label(__('common.delete')),
             ]);
     }
 

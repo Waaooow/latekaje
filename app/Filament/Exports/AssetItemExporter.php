@@ -15,26 +15,26 @@ class AssetItemExporter extends Exporter
     {
         return [
             ExportColumn::make('asset.nama_alat')
-                ->label('Nama Alat'),
+                ->label(__('assets.name_label')),
             ExportColumn::make('asset.kode_aset')
-                ->label('Kode Aset'),
+                ->label(__('assets.code_label')),
             ExportColumn::make('nomor_seri_atau_qr')
-                ->label('Nomor Seri / QR'),
+                ->label(__('units.serial_label')),
             ExportColumn::make('kondisi')
-                ->label('Kondisi'),
+                ->label(__('units.condition_label')),
             ExportColumn::make('location.label')
-                ->label('Lokasi'),
+                ->label(__('units.location_label')),
             ExportColumn::make('status')
-                ->label('Status'),
+                ->label(__('common.status')),
         ];
     }
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-        $body = 'Ekspor data unit selesai: ' . number_format($export->successful_rows) . ' baris berhasil';
+        $body = __('units.export_completed', ['success' => number_format($export->successful_rows)]);
 
         if ($failed = $export->getFailedRowsCount()) {
-            $body .= ', ' . number_format($failed) . ' baris gagal';
+            $body .= __('units.export_failed_suffix', ['failed' => number_format($failed)]);
         }
 
         return $body . '.';

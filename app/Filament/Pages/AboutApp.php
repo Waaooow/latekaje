@@ -8,9 +8,15 @@ class AboutApp extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-information-circle';
 
-    protected static ?string $navigationLabel = 'Tentang Aplikasi';
+    public static function getNavigationLabel(): string
+    {
+        return __('common.nav_about');
+    }
 
-    protected static ?string $title = 'Tentang Aplikasi';
+    public function getTitle(): string | \Illuminate\Contracts\Support\Htmlable
+    {
+        return __('common.nav_about');
+    }
 
     protected static ?int $navigationSort = 99;
 

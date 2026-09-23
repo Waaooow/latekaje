@@ -14,7 +14,7 @@ class EditUser extends EditRecord
     {
         return [
             DeleteAction::make()
-                    ->label('Hapus'),
+                    ->label(__('common.delete')),
         ];
     }
 

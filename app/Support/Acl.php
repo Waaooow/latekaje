@@ -4,29 +4,33 @@ namespace App\Support;
 
 class Acl
 {
-    /** ability => label Indonesia. Key format: "{policyMethod}:{ModelBasename}". */
-    public const ABILITIES = [
-        'viewAny:User' => 'Buka Kelola User',
-        'create:User' => 'Buat user',
-        'update:User' => 'Ubah user / password',
-        'delete:User' => 'Hapus user',
-        'viewAny:Asset' => 'Lihat katalog Aset',
-        'create:Asset' => 'Buat aset',
-        'update:Asset' => 'Ubah aset',
-        'delete:Asset' => 'Hapus aset',
-        'viewAny:AssetItem' => 'Lihat Data Unit',
-        'create:AssetItem' => 'Tambah unit',
-        'update:AssetItem' => 'Ubah unit',
-        'delete:AssetItem' => 'Hapus unit',
-        'viewAny:Loan' => 'Lihat Peminjaman',
-        'create:Loan' => 'Buat pinjaman',
-        'update:Loan' => 'Ubah / kembalikan pinjaman',
-        'delete:Loan' => 'Hapus riwayat pinjam',
-        'viewAny:Location' => 'Lihat Lokasi',
-        'viewAny:SchoolClass' => 'Lihat Kelas',
-        'viewAny:Student' => 'Lihat Siswa',
-        'create:Student' => 'Tambah siswa',
-    ];
+    /** ability => label. Key format: "{policyMethod}:{ModelBasename}". Labels are translatable. */
+    public static function labels(): array
+    {
+        return [
+            'viewAny:User' => __('users.ability_view_any'),
+            'create:User' => __('users.ability_create'),
+            'update:User' => __('users.ability_update'),
+            'delete:User' => __('users.ability_delete'),
+            'viewAny:Asset' => __('assets.ability_view_any'),
+            'create:Asset' => __('assets.ability_create'),
+            'update:Asset' => __('assets.ability_update'),
+            'delete:Asset' => __('assets.ability_delete'),
+            'viewAny:AssetItem' => __('units.ability_view_any'),
+            'create:AssetItem' => __('units.ability_create'),
+            'update:AssetItem' => __('units.ability_update'),
+            'delete:AssetItem' => __('units.ability_delete'),
+            'viewAny:Loan' => __('common.ability_loan_view_any'),
+            'create:Loan' => __('common.ability_loan_create'),
+            'update:Loan' => __('common.ability_loan_update'),
+            'delete:Loan' => __('common.ability_loan_delete'),
+            'viewAny:Location' => __('locations.ability_view_any'),
+            'viewAny:SchoolClass' => __('classes.ability_view_any'),
+            'viewAny:Student' => __('students.ability_view_any'),
+            'create:Student' => __('students.ability_create'),
+        ];
+    }
+
 
     public static function key(string $ability, mixed $subject): string
     {

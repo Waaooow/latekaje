@@ -33,6 +33,10 @@ return [
     'print_all_qr' => 'Cetak Semua QR',
     'print_qr' => 'Cetak QR',
     'print_selected_qr' => 'Cetak QR Terpilih',
+    'print_title' => 'Cetak QR — LATEKAJE',
+    'print_button' => 'Cetak',
+    'print_default_tool' => 'Alat',
+    'print_empty' => 'Tidak ada unit untuk dicetak.',
     'move_room' => 'Pindah Ruangan',
     'target_location_label' => 'Lokasi Tujuan',
     'actions_label' => 'Aksi',
@@ -62,6 +66,7 @@ return [
 
     // Validation (AssetItemService)
     'sn_manual_too_many' => 'Jumlah SN manual (:count) melebihi jumlah unit (:qty).',
+    'sn_duplicate' => 'SN :serial sudah terdaftar di sistem.',
     'sn_manual_duplicate' => "SN ':sn' sudah terdaftar di sistem.",
 
     // Abilities

@@ -13,6 +13,6 @@ class ListSchoolClasses extends ListRecords
     protected function getHeaderActions(): array
     {
         return [CreateAction::make()
-                ->label('Tambah Kelas')];
+                ->label(__('classes.create_action'))];
     }
 }

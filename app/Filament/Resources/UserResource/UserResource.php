@@ -30,70 +30,79 @@ class UserResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationLabel = 'Kelola User';
+    public static function getNavigationLabel(): string
+    {
+        return __('common.nav_users');
+    }
 
-    protected static ?string $modelLabel = 'Pengguna';
+    public static function getModelLabel(): string
+    {
+        return __('users.model_label');
+    }
 
-    protected static ?string $pluralModelLabel = 'Pengguna';
+    public static function getPluralModelLabel(): string
+    {
+        return __('users.model_plural');
+    }
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
             TextInput::make('name')
-                ->label('Nama')
+                ->label(__('users.name_label'))
                 ->required()
                 ->maxLength(255),
 
             TextInput::make('email')
-                ->label('Email')
+                ->label(__('users.email_label'))
                 ->email()
                 ->required()
                 ->unique(ignoreRecord: true)
                 ->maxLength(255),
 
             TextInput::make('nis')
-                ->label('NIS')
+                ->label(__('users.nis_label'))
                 ->unique(ignoreRecord: true)
                 ->maxLength(64)
-                ->placeholder('Khusus akun siswa'),
+                ->placeholder(__('users.nis_placeholder')),
 
             Select::make('role')
-                ->label('Role')
+                ->label(__('users.role_label'))
                 ->required()
                 ->default('siswa')
                 ->live()
                 ->options([
-                    'superadmin' => 'Superadmin',
-                    'toolman' => 'Toolman',
-                    'anak_pkl' => 'Anak PKL',
-                    'siswa' => 'Siswa',
+                    'superadmin' => __('users.role_superadmin'),
+                    'toolman' => __('users.role_toolman'),
+                    'anak_pkl' => __('users.role_anak_pkl'),
+                    'siswa' => __('users.role_siswa'),
                 ]),
 
             Toggle::make('is_active')
-                ->label('Akun aktif')
+                ->label(__('users.account_active_label'))
                 ->default(true)
-                ->helperText('Matikan untuk memblokir login tanpa menghapus akun.'),
+                ->helperText(__('users.account_active_helper')),
 
             CheckboxList::make('permissions.allow')
-                ->label('Hak khusus: IZINKAN (di luar role)')
-                ->options(\App\Support\Acl::ABILITIES)
+                ->label(__('users.perm_allow_label'))
+                ->options(\App\Support\Acl::labels())
                 ->columns(2)
                 ->visible(fn (): bool => (bool) auth()->user()?->isSuperadmin()),
 
             CheckboxList::make('permissions.deny')
-                ->label('Hak khusus: LARANG (walau role membolehkan)')
-                ->options(\App\Support\Acl::ABILITIES)
+                ->label(__('users.perm_deny_label'))
+                ->options(\App\Support\Acl::labels())
                 ->columns(2)
                 ->visible(fn (): bool => (bool) auth()->user()?->isSuperadmin()),
 
             TextInput::make('password')
-                ->label('Password Baru')
+                ->label(__('users.new_password_label'))
                 ->password()
                 ->revealable()
                 ->dehydrated(fn ($state): bool => filled($state))
                 ->dehydrateStateUsing(fn ($state): ?string => filled($state) ? Hash::make($state) : null)
                 ->required(fn (string $context): bool => $context === 'create')
-                ->helperText(fn (string $context): string => $context === 'edit' ? 'Kosongkan bila tidak diganti.' : '')
+                ->helperText(fn (string $context): string => $context === 'edit' ? __('users.password_helper_edit') : '')
                 ->maxLength(255),
         ]);
     }
@@ -103,17 +112,17 @@ class UserResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->label('Nama')
+                    ->label(__('users.name_label'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('email')
-                    ->label('Email')
+                    ->label(__('users.email_label'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('nis')
-                    ->label('NIS')
+                    ->label(__('users.nis_label'))
                     ->badge()
                     ->color('gray')
                     ->copyable()
@@ -122,19 +131,19 @@ class UserResource extends Resource
                     ->toggleable(),
 
                 TextColumn::make('student.nama')
-                    ->label('Data Siswa')
+                    ->label(__('users.student_data_label'))
                     ->searchable()
                     ->placeholder('-')
                     ->toggleable(),
 
                 TextColumn::make('role')
-                    ->label('Role')
+                    ->label(__('users.role_label'))
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'superadmin' => 'Superadmin',
-                        'toolman' => 'Toolman',
-                        'anak_pkl' => 'Anak PKL',
-                        default => 'Siswa',
+                        'superadmin' => __('users.role_superadmin'),
+                        'toolman' => __('users.role_toolman'),
+                        'anak_pkl' => __('users.role_anak_pkl'),
+                        default => __('users.role_siswa'),
                     })
                     ->color(fn (string $state): string => match ($state) {
                         'superadmin' => 'danger',
@@ -144,29 +153,29 @@ class UserResource extends Resource
                     }),
 
                 IconColumn::make('is_active')
-                    ->label('Aktif')
+                    ->label(__('common.active'))
                     ->boolean(),
 
                 TextColumn::make('created_at')
-                    ->label('Dibuat')
+                    ->label(__('users.created_label'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('role')
-                    ->label('Role')
+                    ->label(__('users.role_label'))
                     ->options([
-                        'superadmin' => 'Superadmin',
-                        'toolman' => 'Toolman',
-                        'anak_pkl' => 'Anak PKL',
-                        'siswa' => 'Siswa',
+                        'superadmin' => __('users.role_superadmin'),
+                        'toolman' => __('users.role_toolman'),
+                        'anak_pkl' => __('users.role_anak_pkl'),
+                        'siswa' => __('users.role_siswa'),
                     ])
-                    ->placeholder('Semua'),
+                    ->placeholder(__('common.all')),
             ])
             ->recordActions([
                 Action::make('toggleAktif')
-                    ->label(fn ($record): string => $record->is_active ? 'Nonaktifkan' : 'Aktifkan')
+                    ->label(fn ($record): string => $record->is_active ? __('users.deactivate') : __('users.activate'))
                     ->icon(fn ($record): string => $record->is_active ? 'heroicon-o-no-symbol' : 'heroicon-o-check-circle')
                     ->color(fn ($record): string => $record->is_active ? 'danger' : 'success')
                     ->requiresConfirmation()
@@ -179,19 +188,19 @@ class UserResource extends Resource
                         }
 
                         Notification::make()
-                            ->title($record->is_active ? 'Akun diaktifkan' : 'Akun dinonaktifkan + sesi ditendang')
+                            ->title($record->is_active ? __('users.activated_title') : __('users.deactivated_title'))
                             ->success()
                             ->send();
                     }),
                 EditAction::make()
-                    ->label('Ubah'),
+                    ->label(__('common.edit')),
                 DeleteAction::make()
-                    ->label('Hapus'),
+                    ->label(__('common.delete')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                    ->label('Hapus'),
+                    ->label(__('common.delete')),
                 ]),
             ]);
     }

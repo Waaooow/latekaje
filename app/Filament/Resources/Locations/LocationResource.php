@@ -22,15 +22,24 @@ class LocationResource extends Resource
 {
     protected static ?string $model = Location::class;
 
-    protected static ?string $modelLabel = 'Lokasi';
+    public static function getModelLabel(): string
+    {
+        return __('locations.model_label');
+    }
 
-    protected static ?string $pluralModelLabel = 'Lokasi';
+    public static function getPluralModelLabel(): string
+    {
+        return __('locations.model_plural');
+    }
 
     protected static ?string $recordTitleAttribute = 'label';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
-    protected static ?string $navigationLabel = 'Lokasi';
+    public static function getNavigationLabel(): string
+    {
+        return __('locations.model_label');
+    }
 
     protected static ?int $navigationSort = 5;
 
@@ -38,13 +47,15 @@ class LocationResource extends Resource
     {
         return $schema->components([
             TextInput::make('key')
+                ->label(__('locations.key_label'))
                 ->required()
                 ->unique(ignoreRecord: true)
                 ->rule('alpha_dash')
-                ->placeholder('lab_baru')
+                ->placeholder(__('locations.key_placeholder'))
                 ->maxLength(255),
 
             TextInput::make('label')
+                ->label(__('locations.value_label'))
                 ->required()
                 ->maxLength(255),
         ]);
@@ -55,31 +66,33 @@ class LocationResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('key')
+                    ->label(__('locations.key_label'))
                     ->badge()
                     ->copyable()
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('label')
+                    ->label(__('locations.value_label'))
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('asset_items_count')
-                    ->label('Jumlah Unit')
+                    ->label(__('locations.unit_count_label'))
                     ->counts('assetItems')
                     ->badge()
                     ->sortable(),
             ])
             ->actions([
                 EditAction::make()
-                    ->label('Ubah'),
+                    ->label(__('common.edit')),
                 DeleteAction::make()
-                    ->label('Hapus'),
+                    ->label(__('common.delete')),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                    ->label('Hapus'),
+                    ->label(__('common.delete')),
                 ]),
             ]);
     }

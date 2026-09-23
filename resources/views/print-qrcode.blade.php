@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>Cetak QR — LATEKAJE</title>
+    <title>{{ __("units.print_title") }}</title>
     <style>
         * { box-sizing: border-box; }
         body { font-family: sans-serif; margin: 16px; }
@@ -18,18 +18,18 @@
 </head>
 <body>
     <div class="no-print" style="margin-bottom: 12px;">
-        <button onclick="window.print()">Cetak</button>
+        <button onclick="window.print()">{{ __("units.print_button") }}</button>
     </div>
 
     <div class="grid">
         @forelse ($items as $item)
             <div class="sticker">
                 {!! QrCode::size(90)->generate($item->nomor_seri_atau_qr) !!}
-                <div class="name">{{ $item->asset?->nama_alat ?? 'Alat' }}</div>
+                <div class="name">{{ $item->asset?->nama_alat ?? __('units.print_default_tool') }}</div>
                 <div class="code">{{ $item->nomor_seri_atau_qr }}</div>
             </div>
         @empty
-            <p>Tidak ada unit untuk dicetak.</p>
+            <p>{{ __("units.print_empty") }}</p>
         @endforelse
     </div>
 

@@ -10,7 +10,10 @@ class InventoryLocationChart extends ChartWidget
 {
     protected static ?int $sort = 3;
 
-    protected ?string $heading = "Unit per Lokasi";
+    public function getHeading(): ?string
+    {
+        return __("dashboard.location_heading");
+    }
 
     protected function getType(): string
     {

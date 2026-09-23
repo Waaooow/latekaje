@@ -13,11 +13,11 @@
         }
     }" class="lk-wrap">
         <x-filament::section>
-            <x-slot name="heading">Aplikasi</x-slot>
-            <x-slot name="description">Status: {{ $maintenance ? 'MODE PERAWATAN (tutup untuk umum)' : 'Live normal' }}.</x-slot>
+            <x-slot name="heading">{{ __("settings.app_heading") }}</x-slot>
+            <x-slot name="description">Status: {{ $maintenance ? __('settings.status_maintenance') : __('settings.status_live') }}.</x-slot>
 
             <x-filament::button wire:click="$dispatch('confirm-maintenance-toggle')" :color="$maintenance ? 'success' : 'danger'" icon="heroicon-o-wrench">
-                {{ $maintenance ? 'Matikan Mode Perawatan' : 'Nyalakan Mode Perawatan' }}
+                {{ $maintenance ? __('settings.maintenance_disable') : __('settings.maintenance_enable') }}
             </x-filament::button>
 
             <!-- Confirmation Modal for Maintenance Toggle -->
@@ -30,20 +30,18 @@
                                 <x-filament::icon icon="heroicon-o-wrench" class="w-6 h-6 text-amber-600 dark:text-amber-400" />
                             </div>
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                {{ $maintenance ? 'Matikan Mode Perawatan?' : 'Nyalakan Mode Perawatan?' }}
+                                {{ $maintenance ? __('settings.maintenance_disable') . '?' : __('settings.maintenance_enable') . '?' }}
                             </h3>
                         </div>
                         <p class="text-gray-600 dark:text-gray-300 mb-6">
-                            {{ $maintenance
-                                ? 'Mode perawatan akan dimatikan dan aplikasi akan tersedia untuk semua pengguna. Lanjutkan?'
-                                : 'Aplikasi akan masuk mode perawatan. Semua pengguna kecuali superadmin tidak bisa mengakses aplikasi. Lanjutkan?' }}
+                            {{ $maintenance ? __('settings.maintenance_confirm_off') : __('settings.maintenance_confirm_on') }}
                         </p>
                         <div class="flex justify-end gap-3">
                             <button type="button" @click="confirmMaintenance = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                                Batal
+                                {{ __('common.cancel') }}
                             </button>
                             <button type="button" @click="executeMaintenance" class="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors">
-                                {{ $maintenance ? 'Ya, Matikan' : 'Ya, Nyalakan' }}
+                                {{ $maintenance ? __('settings.maintenance_yes_off') : __('settings.maintenance_yes_on') }}
                             </button>
                         </div>
                     </div>
@@ -52,18 +50,18 @@
         </x-filament::section>
 
         <x-filament::section>
-            <x-slot name="heading">API (untuk integrasi luar)</x-slot>
-            <x-slot name="description">Token milik akunmu. Sertakan sebagai header Authorization: Bearer &lt;token&gt;.</x-slot>
+            <x-slot name="heading">{{ __("settings.api_heading") }}</x-slot>
+            <x-slot name="description">{{ __("settings.api_desc") }}</x-slot>
 
             <div class="lk-grid lk-grid-2">
                 <div class="lk-field">
-                    <label>Nama token baru</label>
+                    <label>{{ __("settings.new_token_name") }}</label>
                     <input wire:model="newTokenName" placeholder="cth: hp-kiosk-1" class="lk-input" />
                 </div>
                 <div class="lk-field">
                     <label>&nbsp;</label>
                     <x-filament::button wire:click="createApiToken" icon="heroicon-o-key">
-                        Buat Token
+                        {{ __('settings.create_token') }}
                     </x-filament::button>
                 </div>
             </div>
@@ -75,7 +73,7 @@
             <div class="lk-tablewrap" style="margin-top: 1rem;">
                 <table class="lk-table">
                     <thead>
-                        <tr><th>Nama</th><th>Dibuat</th><th>Terakhir dipakai</th><th></th></tr>
+                        <tr><th>{{ __("settings.th_name") }}</th><th>{{ __("settings.th_created") }}</th><th>{{ __("settings.th_last_used") }}</th><th></th></tr>
                     </thead>
                     <tbody>
                         @forelse($tokens as $token)
@@ -83,10 +81,10 @@
                             <td>{{ $token->name }}</td>
                             <td>{{ $token->created_at->format('d M Y H:i') }}</td>
                             <td>{{ $token->last_used_at?->format('d M Y H:i') ?? '-' }}</td>
-                            <td><x-filament::button wire:click="revokeApiToken({{ $token->id }})" color="danger" size="sm">Cabut</x-filament::button></td>
+                            <td><x-filament::button wire:click="revokeApiToken({{ $token->id }})" color="danger" size="sm">{{ __('settings.revoke') }}</x-filament::button></td>
                         </tr>
                         @empty
-                        <tr><td colspan="4" class="lk-empty">Belum ada token.</td></tr>
+                        <tr><td colspan="4" class="lk-empty">{{ __("settings.empty_tokens") }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -94,115 +92,128 @@
         </x-filament::section>
 
         <x-filament::section>
-            <x-slot name="heading">Rekap Harian Otomatis</x-slot>
-            <x-slot name="description">Jadwal aktif: setiap hari pukul {{ $scheduleTime }} WIB. Saat ini ada {{ $unreturnedCount }} unit belum kembali.</x-slot>
+            <x-slot name="heading">{{ __("settings.language_heading") }}</x-slot>
+            <x-slot name="description">{{ __("settings.language_desc") }}</x-slot>
+
+            <div class="lk-field" style="max-width: 22rem;">
+                <label>{{ __("settings.language_label") }}</label>
+                <select wire:model="form.app_locale" class="lk-input">
+                    <option value="id">Bahasa Indonesia</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </x-filament::section>
+
+        <x-filament::section>
+            <x-slot name="heading">{{ __("settings.schedule_heading") }}</x-slot>
+            <x-slot name="description">{{ __("recap.daily_desc", ["time" => $scheduleTime, "count" => $unreturnedCount]) }}</x-slot>
 
             <x-filament::button wire:click="sendNow" icon="heroicon-o-paper-airplane">
-                Kirim Rekap Sekarang
+                {{ __('recap.send_now') }}
             </x-filament::button>
         </x-filament::section>
 
         <form wire:submit="save">
             <x-filament::section>
-                <x-slot name="heading">Jadwal</x-slot>
+                <x-slot name="heading">{{ __("settings.schedule_heading") }}</x-slot>
 
                 <div class="lk-grid lk-grid-2">
                     <label class="lk-check">
                         <input type="checkbox" wire:model="form.recap_enabled" />
-                        <span>Kirim otomatis tiap hari</span>
+                        <span>{{ __("settings.auto_daily") }}</span>
                     </label>
                     <div class="lk-field">
-                        <label>Jam kirim (WIB)</label>
+                        <label>{{ __("settings.send_time") }}</label>
                         <input type="time" wire:model="form.recap_time" class="lk-input" />
                     </div>
                 </div>
             </x-filament::section>
 
             <x-filament::section>
-                <x-slot name="heading">WhatsApp via GOWA</x-slot>
-                <x-slot name="description">Prioritas utama. Isi base URL GOWA + target nomor/grup, lalu Tes Koneksi.</x-slot>
+                <x-slot name="heading">{{ __("settings.gowa_heading") }}</x-slot>
+                <x-slot name="description">{{ __("settings.gowa_desc") }}</x-slot>
 
                 <div class="lk-grid lk-grid-2">
                     <label class="lk-check lk-span">
                         <input type="checkbox" wire:model="form.gowa_enabled" />
-                        <span>Aktifkan kirim via GOWA</span>
+                        <span>{{ __("settings.gowa_enable") }}</span>
                     </label>
                     <div class="lk-field lk-span">
-                        <label>Base URL GOWA</label>
+                        <label>{{ __("settings.gowa_base") }}</label>
                         <input wire:model="form.gowa_base_url" placeholder="http://127.0.0.1:3000" class="lk-input lk-mono" />
                     </div>
                     <div class="lk-field">
-                        <label>Basic Auth User <span class="lk-opt">(opsional)</span></label>
+                        <label>{{ __("settings.basic_user") }} <span class="lk-opt">{{ __("settings.optional") }}</span></label>
                         <input wire:model="form.gowa_user" class="lk-input" />
                     </div>
                     <div class="lk-field">
-                        <label>Basic Auth Password <span class="lk-opt">(opsional)</span></label>
+                        <label>{{ __("settings.basic_pass") }} <span class="lk-opt">{{ __("settings.optional") }}</span></label>
                         <input type="password" wire:model="form.gowa_pass" class="lk-input" />
                     </div>
                     <div class="lk-field lk-span">
-                        <label>Target (nomor 628.. / JID grup ....@g.us)</label>
+                        <label>{{ __("settings.target_label") }}</label>
                         <input wire:model="form.gowa_target" placeholder="6281234567890" class="lk-input lk-mono" />
                     </div>
                     <div class="lk-field lk-span">
-                        <label>Relay URL <span class="lk-opt">(opsional — bila GOWA tidak terjangkau langsung dari server)</span></label>
+                        <label>{{ __("settings.relay_url") }} <span class="lk-opt">{{ __("settings.relay_url_hint") }}</span></label>
                         <input wire:model="form.gowa_relay_url" placeholder="http://100.64.0.10:8099" class="lk-input lk-mono" />
                     </div>
                     <div class="lk-field lk-span">
-                        <label>Relay Secret</label>
+                        <label>{{ __("settings.relay_secret") }}</label>
                         <input type="password" wire:model="form.gowa_relay_secret" class="lk-input lk-mono" />
                     </div>
                 </div>
                 <div class="lk-btnrow">
                     <x-filament::button wire:click="testGowa" color="gray" icon="heroicon-o-signal">
-                        Tes Koneksi GOWA
+                        {{ __('settings.test_conn') }}
                     </x-filament::button>
-                    <input wire:model="testTarget" placeholder="Nomor tes (kosongkan = pakai Target)" class="lk-input lk-mono" style="max-width: 19rem;" />
+                    <input wire:model="testTarget" placeholder="{{ __('settings.test_target_placeholder') }}" class="lk-input lk-mono" style="max-width: 19rem;" />
                     <x-filament::button wire:click="sendTestWa" color="gray" icon="heroicon-o-chat-bubble-left-right">
-                        Kirim Pesan Tes
+                        {{ __('settings.send_test') }}
                     </x-filament::button>
                     @if($gowaTest)<span class="lk-note">{{ $gowaTest }}</span>@endif
                 </div>
             </x-filament::section>
 
             <x-filament::section>
-                <x-slot name="heading">Webhook Umum</x-slot>
-                <x-slot name="description">POST JSON {event, generated_at, total, items} ke URL apa pun (n8n, bot sendiri, dll).</x-slot>
+                <x-slot name="heading">{{ __("settings.webhook_heading") }}</x-slot>
+                <x-slot name="description">{{ __("settings.webhook_desc") }}</x-slot>
 
                 <div class="lk-grid lk-grid-2">
                     <label class="lk-check lk-span">
                         <input type="checkbox" wire:model="form.webhook_enabled" />
-                        <span>Aktifkan webhook</span>
+                        <span>{{ __("settings.webhook_enable") }}</span>
                     </label>
                     <div class="lk-field lk-span">
-                        <label>Webhook URL</label>
+                        <label>{{ __("settings.webhook_url") }}</label>
                         <input wire:model="form.webhook_url" placeholder="https://..." class="lk-input lk-mono" />
                     </div>
                     <div class="lk-field">
-                        <label>Cara kirim secret</label>
+                        <label>{{ __("settings.secret_how") }}</label>
                         <select wire:model="form.webhook_auth" class="lk-input">
-                            <option value="header">Header X-Webhook-Secret</option>
-                            <option value="bearer">Bearer token</option>
-                            <option value="basic">Basic auth (user + password)</option>
-                            <option value="query">Query param ?secret=</option>
-                            <option value="none">Tanpa secret</option>
+                            <option value="header">{{ __("settings.opt_header") }}</option>
+                            <option value="bearer">{{ __("settings.opt_bearer") }}</option>
+                            <option value="basic">{{ __("settings.opt_basic") }}</option>
+                            <option value="query">{{ __("settings.opt_query") }}</option>
+                            <option value="none">{{ __("settings.opt_none") }}</option>
                         </select>
                     </div>
                     <div class="lk-field">
-                        <label>Secret / Token</label>
+                        <label>{{ __("settings.secret_token") }}</label>
                         <input wire:model="form.webhook_secret" class="lk-input lk-mono" />
                     </div>
                     <div class="lk-field">
-                        <label>Basic User <span class="lk-opt">(bila mode basic)</span></label>
+                        <label>{{ __("settings.basic_user_cond") }} <span class="lk-opt">{{ __("settings.basic_cond_hint") }}</span></label>
                         <input wire:model="form.webhook_user" class="lk-input" />
                     </div>
                     <div class="lk-field">
-                        <label>Basic Password</label>
+                        <label>{{ __("settings.basic_pass_plain") }}</label>
                         <input type="password" wire:model="form.webhook_pass" class="lk-input" />
                     </div>
                 </div>
                 <div class="lk-btnrow">
                     <x-filament::button wire:click="testWebhook" color="gray" icon="heroicon-o-signal">
-                        Tes Webhook
+                        {{ __('settings.test_webhook') }}
                     </x-filament::button>
                     @if($webhookTest)<span class="lk-note">{{ $webhookTest }}</span>@endif
                 </div>
@@ -210,18 +221,18 @@
 
             <div style="display: flex; justify-content: flex-end;">
                 <x-filament::button type="submit" icon="heroicon-o-check">
-                    Simpan Semua Pengaturan
+                    {{ __('settings.save_all') }}
                 </x-filament::button>
             </div>
         </form>
 
         <x-filament::section>
-            <x-slot name="heading">Riwayat Pengiriman (10 terakhir)</x-slot>
+            <x-slot name="heading">{{ __("settings.history_heading") }}</x-slot>
 
             <div class="lk-tablewrap">
                 <table class="lk-table">
                     <thead>
-                        <tr><th>Waktu</th><th>Kanal</th><th>Target</th><th>Unit</th><th>Status</th><th>Respon</th></tr>
+                        <tr><th>{{ __("settings.th_time") }}</th><th>{{ __("settings.th_channel") }}</th><th>{{ __("settings.th_target") }}</th><th>{{ __("settings.th_units") }}</th><th>{{ __("settings.th_status") }}</th><th>{{ __("settings.th_response") }}</th></tr>
                     </thead>
                     <tbody>
                         @forelse($logs as $log)
@@ -234,7 +245,7 @@
                             <td class="lk-mono" style="color: #6b7280;">{{ \Illuminate\Support\Str::limit($log->response ?? '', 60) }}</td>
                         </tr>
                         @empty
-                        <tr><td colspan="6" class="lk-empty">Belum ada pengiriman.</td></tr>
+                        <tr><td colspan="6" class="lk-empty">{{ __("settings.empty_logs") }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>

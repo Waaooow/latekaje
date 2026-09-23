@@ -9,7 +9,10 @@ class InventoryConditionChart extends ChartWidget
 {
     protected static ?int $sort = 2;
 
-    protected ?string $heading = 'Kondisi Inventaris';
+    public function getHeading(): ?string
+    {
+        return __('dashboard.condition_heading');
+    }
 
     protected function getType(): string
     {

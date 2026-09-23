@@ -95,4 +95,11 @@ return [
     'th_status' => 'Status',
     'th_response' => 'Respon',
     'empty_logs' => 'Belum ada pengiriman.',
+    'language_heading' => 'Bahasa Aplikasi',
+    'language_label' => 'Bahasa',
+    'language_desc' => 'Berlaku untuk seluruh tampilan aplikasi.',
+    'maintenance_confirm_off' => 'Mode perawatan akan dimatikan dan aplikasi akan tersedia untuk semua pengguna. Lanjutkan?',
+    'maintenance_confirm_on' => 'Aplikasi akan masuk mode perawatan. Semua pengguna kecuali superadmin tidak bisa mengakses aplikasi. Lanjutkan?',
+    'maintenance_yes_off' => 'Ya, Matikan',
+    'maintenance_yes_on' => 'Ya, Nyalakan',
 ];

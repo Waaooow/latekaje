@@ -14,7 +14,7 @@ class ListAssetItems extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Tambah Unit'),
+                ->label(__('units.create_action')),
         ];
     }
 }

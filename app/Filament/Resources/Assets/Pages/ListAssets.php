@@ -14,7 +14,7 @@ class ListAssets extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label('Tambah Aset'),
+                ->label(__('assets.create_action')),
         ];
     }
 }

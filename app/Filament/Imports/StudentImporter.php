@@ -16,23 +16,27 @@ class StudentImporter extends Importer
     {
         return [
             ImportColumn::make('nis')
+                ->label(__('students.import_col_nis'))
                 ->rules(['nullable', 'string', 'max:64'])
                 ->examples(['1001', ''])
                 ->fillRecordUsing(fn () => null),
 
             ImportColumn::make('nama')
+                ->label(__('students.import_col_name'))
                 ->requiredMapping()
                 ->rules(['required', 'string', 'max:255'])
                 ->examples(['Budi Santoso'])
                 ->fillRecordUsing(fn () => null),
 
             ImportColumn::make('kelas')
+                ->label(__('students.import_col_class'))
                 ->requiredMapping()
                 ->rules(['required', 'string', 'max:255'])
                 ->examples(['X TJKT 1'])
                 ->fillRecordUsing(fn () => null),
 
             ImportColumn::make('password')
+                ->label(__('students.import_col_password'))
                 ->rules(['nullable', 'string', 'max:255'])
                 ->examples(['1001'])
                 ->fillRecordUsing(fn () => null),
@@ -74,10 +78,10 @@ class StudentImporter extends Importer
 
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Impor siswa selesai: '.number_format($import->successful_rows).' baris berhasil';
+        $body = __('students.import_completed', ['success' => number_format($import->successful_rows)]);
 
         if ($failed = $import->getFailedRowsCount()) {
-            $body .= ', '.number_format($failed).' baris gagal';
+            $body .= __('students.import_failed_suffix', ['failed' => number_format($failed)]);
         }
 
         return $body.'.';

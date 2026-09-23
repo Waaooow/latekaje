@@ -33,23 +33,23 @@ class RecapService
 
     public static function formatWa(array $items): string
     {
-        $now = Carbon::now()->locale('id');
+        $now = Carbon::now()->locale(app()->getLocale());
         $lines = [];
-        $lines[] = '*REKAP ALAT BELUM KEMBALI*';
-        $lines[] = $now->translatedFormat('l, d M Y H:i').' WIB';
-        $lines[] = 'Total: '.count($items).' unit';
+        $lines[] = __('recap.wa_title');
+        $lines[] = $now->translatedFormat('l, d M Y H:i').' '.__('recap.wa_datetime_suffix');
+        $lines[] = __('recap.wa_total', ['count' => count($items)]);
         $lines[] = '';
 
         foreach ($items as $i => $it) {
             $tgl = $it['tanggal_pinjam'] ? Carbon::parse($it['tanggal_pinjam'])->translatedFormat('d M H:i') : '-';
-            $lama = $it['hari'] === 0 ? 'hari ini' : $it['hari'].' hari lalu';
+            $lama = $it['hari'] === 0 ? __('recap.wa_today') : __('recap.wa_days_ago', ['count' => $it['hari']]);
             $lines[] = ($i + 1).'. '.$it['qr'].' ('.$it['alat'].')';
             $lines[] = '   '.$it['peminjam'].' — '.$it['kelas'];
-            $lines[] = '   Dipinjam '.$lama.' ('.$tgl.')';
+            $lines[] = '   '.__('recap.wa_borrowed_line', ['lama' => $lama, 'tgl' => $tgl]);
         }
 
         if ($items === []) {
-            $lines[] = 'Semua alat sudah kembali. Mantap!';
+            $lines[] = __('recap.wa_all_returned');
         }
 
         return implode("\n", $lines);
@@ -73,7 +73,7 @@ class RecapService
                 'status' => $res['ok'] ? 'ok' : 'fail',
                 'response' => $res['status'].': '.$res['body'],
             ]);
-            $out['gowa'] = $res['ok'] ? 'terkirim ke '.$target : 'gagal ('.$res['body'].')';
+            $out['gowa'] = $res['ok'] ? __('recap.gowa_sent_to', ['target' => $target]) : __('recap.gowa_send_fail', ['body' => $res['body']]);
         }
 
         if (Setting::boolean('webhook_enabled') && Setting::get('webhook_url')) {
@@ -91,11 +91,11 @@ class RecapService
                 'status' => $res['ok'] ? 'ok' : 'fail',
                 'response' => $res['status'].': '.$res['body'],
             ]);
-            $out['webhook'] = $res['ok'] ? 'terkirim' : 'gagal ('.$res['status'].': '.$res['body'].')';
+            $out['webhook'] = $res['ok'] ? __('recap.webhook_sent') : __('recap.webhook_send_fail', ['status' => $res['status'], 'body' => $res['body']]);
         }
 
         if ($out === []) {
-            $out['info'] = 'Tidak ada kanal aktif. Aktifkan GOWA / webhook di halaman Notifikasi.';
+            $out['info'] = __('recap.no_channel');
         }
 
         return ['total' => count($items), 'channels' => $out];

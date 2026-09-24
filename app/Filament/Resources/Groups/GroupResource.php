@@ -39,9 +39,14 @@ class GroupResource extends Resource
         return __('groups.model_label');
     }
 
-    protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedAcademicCap;
+    protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedUserGroup;
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 13;
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('common.nav_group_master');
+    }
 
     public static function form(Schema $schema): Schema
     {

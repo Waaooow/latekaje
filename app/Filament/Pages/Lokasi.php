@@ -3,7 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Models\AssetItem;
+use BackedEnum;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -13,7 +15,7 @@ class Lokasi extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-map-pin';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMap;
 
     public static function getNavigationLabel(): string
     {
@@ -27,7 +29,12 @@ class Lokasi extends Page implements HasTable
 
     protected static ?string $slug = 'data-per-lokasi';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 20;
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('common.nav_group_reports');
+    }
 
     protected string $view = 'filament.pages.lokasi';
 

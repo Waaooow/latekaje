@@ -20,7 +20,14 @@ class AssetResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'nama_alat';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBox;
+
+    protected static ?int $navigationSort = 10;
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('common.nav_group_master');
+    }
 
     public static function getModelLabel(): string
     {

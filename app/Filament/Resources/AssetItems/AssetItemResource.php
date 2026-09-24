@@ -20,6 +20,13 @@ class AssetItemResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQrCode;
 
+    protected static ?int $navigationSort = 11;
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('common.nav_group_master');
+    }
+
     public static function getNavigationLabel(): string
     {
         return __('common.nav_units');

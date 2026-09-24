@@ -29,6 +29,12 @@ return [
     'nav_about' => 'Tentang Aplikasi',
     'nav_location_data' => 'Data per Lokasi',
 
+    // Navigation groups
+    'nav_group_transactions' => 'Transaksi',
+    'nav_group_master' => 'Data Master',
+    'nav_group_reports' => 'Laporan',
+    'nav_group_system' => 'Sistem',
+
     // About page
     'about_version' => 'Versi :version',
     'about_body' => 'Aplikasi inventaris dan peminjaman alat lab Teknik Jaringan Komputer dan Telekomunikasi (TJKT). Kelola stok alat, pantau kondisi dan lokasi, serta catat peminjaman dan pengembalian secara cepat lewat scan QR.',

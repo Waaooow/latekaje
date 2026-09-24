@@ -29,6 +29,12 @@ return [
     'nav_about' => 'About App',
     'nav_location_data' => 'Data per Location',
 
+    // Navigation groups
+    'nav_group_transactions' => 'Transactions',
+    'nav_group_master' => 'Master Data',
+    'nav_group_reports' => 'Reports',
+    'nav_group_system' => 'System',
+
     // About page
     'about_version' => 'Version :version',
     'about_body' => 'Inventory and lab equipment loan application for Computer Network and Telecommunication Engineering (TJKT). Manage tool stock, monitor condition and location, and record loans and returns quickly via QR scan.',

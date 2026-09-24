@@ -10,10 +10,11 @@ use App\Services\WebhookClient;
 use BackedEnum;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 
 class NotificationSettings extends Page
 {
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
     public static function getNavigationLabel(): string
     {
@@ -27,7 +28,12 @@ class NotificationSettings extends Page
         return __('settings.title');
     }
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 31;
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('common.nav_group_system');
+    }
 
     protected string $view = 'filament.pages.notification-settings';
 

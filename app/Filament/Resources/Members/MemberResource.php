@@ -31,7 +31,12 @@ class MemberResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 12;
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('common.nav_group_master');
+    }
 
     public static function getModelLabel(): string
     {

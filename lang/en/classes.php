@@ -14,6 +14,7 @@ return [
     'class_label' => 'Class',
     'code_column' => 'Code',
     'total_loans_label' => 'Total Loans',
+    'active_borrowers_label' => 'Active Borrowers',
 
     // Pages
     'create_action' => 'Add Class',

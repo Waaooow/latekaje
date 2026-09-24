@@ -13,4 +13,9 @@ class SchoolClass extends Model
     {
         return $this->hasMany(Loan::class, 'kelas', 'label');
     }
+
+    public function activeLoans(): HasMany
+    {
+        return $this->hasMany(Loan::class, 'kelas', 'label')->where('status', 'aktif');
+    }
 }

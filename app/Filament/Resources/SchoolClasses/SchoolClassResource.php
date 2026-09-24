@@ -15,6 +15,8 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class SchoolClassResource extends Resource
 {
@@ -63,6 +65,10 @@ class SchoolClassResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->withCount([
+                'activeLoans as active_borrowers' => fn (Builder $q) => $q
+                    ->select(DB::raw('COUNT(DISTINCT COALESCE(nis, CONCAT(\'__nama__\', nama_siswa)))')),
+            ]))
             ->columns([
                 TextColumn::make('label')
                     ->label(__('classes.class_label'))
@@ -75,9 +81,8 @@ class SchoolClassResource extends Resource
                     ->copyable()
                     ->toggleable(),
 
-                TextColumn::make('loans_count')
-                    ->label(__('classes.total_loans_label'))
-                    ->counts('loans')
+                TextColumn::make('active_borrowers')
+                    ->label(__('classes.active_borrowers_label'))
                     ->badge()
                     ->sortable(),
             ])

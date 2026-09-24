@@ -14,6 +14,7 @@ return [
     'class_label' => 'Kelas',
     'code_column' => 'Kode',
     'total_loans_label' => 'Total Pinjam',
+    'active_borrowers_label' => 'Total Peminjam',
 
     // Pages
     'create_action' => 'Tambah Kelas',

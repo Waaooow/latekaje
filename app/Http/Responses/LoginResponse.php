@@ -14,7 +14,7 @@ class LoginResponse implements Responsable
     {
         $user = Filament::auth()->user();
 
-        if ($user?->isSiswa()) {
+        if ($user?->isBorrower()) {
             return redirect()->to(LoanResource::getUrl('index'));
         }
 

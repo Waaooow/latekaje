@@ -32,9 +32,9 @@ class ActiveLoansTable extends BaseWidget
                     ->formatStateUsing(fn (?string $state): string => $state ?? '(unit dihapus)')
                     ->searchable(),
 
-                TextColumn::make('nama_siswa')
+                TextColumn::make('borrower_name')
                     ->label(__('dashboard.col_borrower'))
-                    ->description(fn ($record) => $record->kelas)
+                    ->description(fn ($record) => $record->group)
                     ->searchable(),
 
                 TextColumn::make('tanggal_pinjam')

@@ -25,9 +25,9 @@ class Loan extends Model
         return $this->belongsTo(AssetItem::class);
     }
 
-    public function student(): BelongsTo
+    public function member(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Member::class);
     }
 
     public function getNamaAlatAttribute(): string

@@ -60,22 +60,23 @@ class UserResource extends Resource
                 ->unique(ignoreRecord: true)
                 ->maxLength(255),
 
-            TextInput::make('nis')
-                ->label(__('users.nis_label'))
+            TextInput::make('code')
+                ->label(__('users.code_label'))
                 ->unique(ignoreRecord: true)
                 ->maxLength(64)
-                ->placeholder(__('users.nis_placeholder')),
+                ->placeholder(__('users.code_placeholder')),
 
             Select::make('role')
                 ->label(__('users.role_label'))
                 ->required()
-                ->default('siswa')
+                ->default('users')
                 ->live()
                 ->options([
                     'superadmin' => __('users.role_superadmin'),
-                    'toolman' => __('users.role_toolman'),
-                    'anak_pkl' => __('users.role_anak_pkl'),
-                    'siswa' => __('users.role_siswa'),
+                    'admin' => __('users.role_admin'),
+                    'staff' => __('users.role_staff'),
+                    'assistant' => __('users.role_assistant'),
+                    'users' => __('users.role_users'),
                 ]),
 
             Toggle::make('is_active')
@@ -121,8 +122,8 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('nis')
-                    ->label(__('users.nis_label'))
+                TextColumn::make('code')
+                    ->label(__('users.code_label'))
                     ->badge()
                     ->color('gray')
                     ->copyable()
@@ -130,8 +131,8 @@ class UserResource extends Resource
                     ->placeholder('-')
                     ->toggleable(),
 
-                TextColumn::make('student.nama')
-                    ->label(__('users.student_data_label'))
+                TextColumn::make('member.name')
+                    ->label(__('users.member_data_label'))
                     ->searchable()
                     ->placeholder('-')
                     ->toggleable(),
@@ -141,14 +142,16 @@ class UserResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'superadmin' => __('users.role_superadmin'),
-                        'toolman' => __('users.role_toolman'),
-                        'anak_pkl' => __('users.role_anak_pkl'),
-                        default => __('users.role_siswa'),
+                        'admin' => __('users.role_admin'),
+                        'staff' => __('users.role_staff'),
+                        'assistant' => __('users.role_assistant'),
+                        default => __('users.role_users'),
                     })
                     ->color(fn (string $state): string => match ($state) {
                         'superadmin' => 'danger',
-                        'toolman' => 'warning',
-                        'anak_pkl' => 'info',
+                        'admin' => 'warning',
+                        'staff' => 'info',
+                        'assistant' => 'success',
                         default => 'gray',
                     }),
 
@@ -167,9 +170,10 @@ class UserResource extends Resource
                     ->label(__('users.role_label'))
                     ->options([
                         'superadmin' => __('users.role_superadmin'),
-                        'toolman' => __('users.role_toolman'),
-                        'anak_pkl' => __('users.role_anak_pkl'),
-                        'siswa' => __('users.role_siswa'),
+                        'admin' => __('users.role_admin'),
+                        'staff' => __('users.role_staff'),
+                        'assistant' => __('users.role_assistant'),
+                        'users' => __('users.role_users'),
                     ])
                     ->placeholder(__('common.all')),
             ])

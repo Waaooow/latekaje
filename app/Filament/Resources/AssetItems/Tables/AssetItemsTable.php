@@ -68,10 +68,10 @@ class AssetItemsTable
                         default => (string) $state,
                     }),
 
-                TextColumn::make('activeLoan.nama_siswa')
+                TextColumn::make('activeLoan.borrower_name')
                     ->label(__('units.borrowed_by_label'))
                     ->placeholder('—')
-                    ->description(fn ($record): ?string => $record->activeLoan?->kelas),
+                    ->description(fn ($record): ?string => $record->activeLoan?->group),
 
                 TextColumn::make('location.label')
                     ->label(__('units.location_label'))

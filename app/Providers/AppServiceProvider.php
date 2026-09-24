@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Auth\NisUserProvider;
+use App\Auth\CodeUserProvider;
 use App\Models\User;
 use App\Support\Acl;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        Auth::provider('nis-eloquent', fn ($app, array $config) => new NisUserProvider($app['hash'], $config['model']));
+        Auth::provider('code-eloquent', fn ($app, array $config) => new CodeUserProvider($app['hash'], $config['model']));
         $this->app->bind(
             \Filament\Auth\Http\Responses\Contracts\LoginResponse::class,
             \App\Http\Responses\LoginResponse::class,

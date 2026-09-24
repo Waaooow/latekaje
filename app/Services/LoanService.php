@@ -13,7 +13,7 @@ class LoanService
     /**
      * @throws ValidationException
      */
-    public static function borrow(int $itemId, string $nama, string $kelas, ?string $pin = null, ?int $studentId = null, ?string $nis = null): Loan
+    public static function borrow(int $itemId, string $borrowerName, string $group, ?string $pin = null, ?int $memberId = null, ?string $code = null): Loan
     {
         $pin = trim((string) $pin);
 
@@ -25,7 +25,7 @@ class LoanService
             ]);
         }
 
-        [$loan, $itemCode] = DB::transaction(function () use ($itemId, $nama, $kelas, $pin, $studentId, $nis) {
+        [$loan, $itemCode] = DB::transaction(function () use ($itemId, $borrowerName, $group, $pin, $memberId, $code) {
             /** @var AssetItem $item */
             $item = AssetItem::lockForUpdate()->findOrFail($itemId);
 
@@ -43,12 +43,12 @@ class LoanService
 
             $loan = Loan::create([
                 'asset_item_id' => $item->id,
-                'nama_siswa' => $nama,
-                'kelas' => $kelas,
+                'borrower_name' => $borrowerName,
+                'group' => $group,
                 'status' => 'aktif',
                 'return_pin' => $pin,
-                'student_id' => $studentId,
-                'nis' => $nis,
+                'member_id' => $memberId,
+                'code' => $code,
             ]);
 
             $item->update(['status' => 'dipinjam']);
@@ -56,7 +56,7 @@ class LoanService
             return [$loan, $item->nomor_seri_atau_qr];
         });
 
-        broadcast(new LoanActivityEvent('borrow', $loan->id, $itemCode, $nama, $kelas))->toOthers();
+        broadcast(new LoanActivityEvent('borrow', $loan->id, $itemCode, $borrowerName, $group))->toOthers();
 
         return $loan;
     }
@@ -128,8 +128,8 @@ class LoanService
             return [
                 'loan_id' => $lockedLoan->id,
                 'item_code' => $item->nomor_seri_atau_qr,
-                'borrower' => $lockedLoan->nama_siswa,
-                'kelas' => $lockedLoan->kelas,
+                'borrower_name' => $lockedLoan->borrower_name,
+                'group' => $lockedLoan->group,
                 'by' => $returnedBy,
             ];
         });
@@ -138,10 +138,41 @@ class LoanService
             'return',
             $info['loan_id'],
             $info['item_code'],
-            $info['borrower'],
-            $info['kelas'],
+            $info['borrower_name'],
+            $info['group'],
             $info['by'],
         ))->toOthers();
+    }
+
+    /**
+     * Tutup paksa oleh superadmin: tanpa verifikasi QR/PIN.
+     * Dipakai saat peminjam out paksa / tak memungkinkan mengembalikan.
+     */
+    public static function forceClose(Loan $loan, string $receivedBy, ?string $returnedBy = null): void
+    {
+        DB::transaction(function () use ($loan, $receivedBy, $returnedBy) {
+            /** @var Loan $lockedLoan */
+            $lockedLoan = Loan::lockForUpdate()->findOrFail($loan->id);
+
+            if ($lockedLoan->status !== 'aktif') {
+                throw ValidationException::withMessages([
+                    'qr' => __('loans.val_closed'),
+                ]);
+            }
+
+            $lockedLoan->update([
+                'status' => 'kembali',
+                'tanggal_kembali' => now(),
+                'returned_by' => $returnedBy !== '' ? $returnedBy : $lockedLoan->borrower_name,
+                'return_relation' => 'sendiri',
+                'return_method' => 'petugas',
+                'received_by' => $receivedBy,
+            ]);
+
+            if ($lockedLoan->asset_item_id) {
+                AssetItem::whereKey($lockedLoan->asset_item_id)->update(['status' => 'tersedia']);
+            }
+        });
     }
 
     private static function newPin(): string

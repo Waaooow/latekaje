@@ -7,13 +7,14 @@ return [
     // Form
     'name_label' => 'Name',
     'email_label' => 'Email',
-    'nis_label' => 'NIS',
-    'nis_placeholder' => 'Student accounts only',
+    'code_label' => 'Member ID',
+    'code_placeholder' => 'Member accounts only',
     'role_label' => 'Role',
     'role_superadmin' => 'Superadmin',
-    'role_toolman' => 'Toolman',
-    'role_anak_pkl' => 'Anak PKL',
-    'role_siswa' => 'Siswa',
+    'role_admin' => 'Admin',
+    'role_assistant' => 'Assistant',
+    'role_staff' => 'Staff',
+    'role_users' => 'Member',
     'account_active_label' => 'Account active',
     'account_active_helper' => 'Turn off to block login without deleting the account.',
     'perm_allow_label' => 'Extra rights: ALLOW (beyond role)',
@@ -22,7 +23,7 @@ return [
     'password_helper_edit' => 'Leave empty to keep unchanged.',
 
     // Table
-    'student_data_label' => 'Student Data',
+    'member_data_label' => 'Member Data',
     'created_label' => 'Created',
 
     // Toggle-active action

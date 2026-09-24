@@ -25,14 +25,14 @@ class LoanExporter extends Exporter
             ExportColumn::make('assetItem.nomor_seri_atau_qr')
                 ->label(__('loans.exp_qr')),
 
-            ExportColumn::make('nis')
-                ->label(__('loans.exp_nis')),
+            ExportColumn::make('code')
+                ->label(__('loans.exp_code')),
 
-            ExportColumn::make('nama_siswa')
+            ExportColumn::make('borrower_name')
                 ->label(__('loans.exp_borrower')),
 
-            ExportColumn::make('kelas')
-                ->label(__('loans.exp_class')),
+            ExportColumn::make('group')
+                ->label(__('loans.exp_group')),
 
             ExportColumn::make('tanggal_pinjam')
                 ->label(__('loans.exp_borrowed_at'))

@@ -16,8 +16,8 @@ class LoanActivityEvent implements ShouldBroadcast
         public string $kind,
         public int $loanId,
         public string $itemCode,
-        public string $borrower,
-        public string $kelas,
+        public string $borrower_name,
+        public string $group,
         public ?string $by = null,
     ) {}
 

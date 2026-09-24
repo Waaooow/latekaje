@@ -43,7 +43,7 @@ class NotificationSettings extends Page
     {
         $user = auth()->user();
 
-        return $user && ($user->isSuperadmin() || $user->isToolman());
+        return $user && ($user->isSuperadmin() || $user->isAdmin());
     }
 
     public function mount(): void

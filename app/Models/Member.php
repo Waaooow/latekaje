@@ -5,9 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Student extends Model
+class Member extends Model
 {
-    protected $fillable = ['nis', 'nama', 'kelas', 'aktif'];
+    protected $fillable = ['code', 'name', 'group', 'aktif'];
 
     protected function casts(): array
     {
@@ -16,16 +16,16 @@ class Student extends Model
 
     public function loans(): HasMany
     {
-        return $this->hasMany(Loan::class);
+        return $this->hasMany(Loan::class, 'member_id');
     }
 
     public function activeLoans(): HasMany
     {
-        return $this->hasMany(Loan::class)->where('status', 'aktif');
+        return $this->hasMany(Loan::class, 'member_id')->where('status', 'aktif');
     }
 
     public function label(): string
     {
-        return ($this->nis ? $this->nis.' — ' : '').$this->nama.' ('.$this->kelas.')';
+        return ($this->code ? $this->code.' — ' : '').$this->name.' ('.$this->group.')';
     }
 }

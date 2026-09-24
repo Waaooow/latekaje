@@ -19,7 +19,7 @@ class LoanResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $recordTitleAttribute = 'nama_siswa';
+    protected static ?string $recordTitleAttribute = 'borrower_name';
 
     public static function getNavigationLabel(): string
     {
@@ -41,15 +41,15 @@ class LoanResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        // Siswa pribadi hanya melihat pinjamannya sendiri.
-        // Akun kiosk generik (tanpa NIS) tetap melihat semua.
-        if ($user?->isSiswa() && ($user->nis || $user->student_id)) {
+        // Akun peminjam pribadi (role users + identitas) hanya melihat
+        // pinjamannya sendiri. Staf dan akun kiosk generik melihat semua.
+        if ($user?->role === 'users' && ($user->code || $user->member_id)) {
             $query->where(function (Builder $w) use ($user) {
-                if ($user->nis) {
-                    $w->orWhere('nis', $user->nis);
+                if ($user->code) {
+                    $w->orWhere('code', $user->code);
                 }
-                if ($user->student_id) {
-                    $w->orWhere('student_id', $user->student_id);
+                if ($user->member_id) {
+                    $w->orWhere('member_id', $user->member_id);
                 }
             });
         }

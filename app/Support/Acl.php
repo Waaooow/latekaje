@@ -25,9 +25,9 @@ class Acl
             'update:Loan' => __('common.ability_loan_update'),
             'delete:Loan' => __('common.ability_loan_delete'),
             'viewAny:Location' => __('locations.ability_view_any'),
-            'viewAny:SchoolClass' => __('classes.ability_view_any'),
-            'viewAny:Student' => __('students.ability_view_any'),
-            'create:Student' => __('students.ability_create'),
+            'viewAny:Group' => __('groups.ability_view_any'),
+            'viewAny:Member' => __('members.ability_view_any'),
+            'create:Member' => __('members.ability_create'),
         ];
     }
 

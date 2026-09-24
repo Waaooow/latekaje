@@ -14,25 +14,22 @@ class CreateLoan extends CreateRecord
 
     protected function handleRecordCreation(array $data): Loan
     {
-        $user = auth()->user();
-        $studentId = isset($data['student_id']) && $data['student_id'] !== '' ? (int) $data['student_id'] : null;
+        $memberId = isset($data['member_id']) && $data['member_id'] !== '' ? (int) $data['member_id'] : null;
 
-        // Siswa login pribadi: identitas dikunci ke akunnya (anti ketuker).
-        if ($user?->isSiswa() && ($user->student_id || $user->nis)) {
-            $student = $user->student;
-            $studentId = $user->student_id;
-            $data['nis'] = $user->nis;
-            $data['nama_siswa'] = $student?->nama ?? $user->name;
-            $data['kelas'] = $student?->kelas ?? ($data['kelas'] ?? '-');
+        // Konsistensi: bila anggota dipilih, snapshot identitas diambil dari master.
+        if ($memberId && ($member = \App\Models\Member::find($memberId))) {
+            $data['code'] = $member->code;
+            $data['borrower_name'] = $member->name;
+            $data['group'] = $member->group;
         }
 
         $loan = LoanService::borrow(
             (int) $data['asset_item_id'],
-            (string) $data['nama_siswa'],
-            (string) $data['kelas'],
+            (string) $data['borrower_name'],
+            (string) $data['group'],
             (string) ($data['return_pin'] ?? ''),
-            $studentId,
-            isset($data['nis']) && $data['nis'] !== '' ? (string) $data['nis'] : null,
+            $memberId,
+            isset($data['code']) && $data['code'] !== '' ? (string) $data['code'] : null,
         );
 
         Notification::make()

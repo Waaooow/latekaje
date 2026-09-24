@@ -4,25 +4,25 @@ namespace App\Policies;
 
 use App\Models\User;
 
-class SchoolClassPolicy
+class GroupPolicy
 {
     public function viewAny(User $user): bool
     {
-        return ! $user->isSiswa();
+        return ! $user->isBorrower();
     }
 
     public function create(User $user): bool
     {
-        return $user->isSuperadmin() || $user->isToolman();
+        return $user->isSuperadmin() || $user->isAdmin();
     }
 
     public function update(User $user): bool
     {
-        return $user->isSuperadmin() || $user->isToolman();
+        return $user->isSuperadmin() || $user->isAdmin();
     }
 
     public function delete(User $user): bool
     {
-        return $user->isSuperadmin() || $user->isToolman();
+        return $user->isSuperadmin() || $user->isAdmin();
     }
 }

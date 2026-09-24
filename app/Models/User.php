@@ -60,4 +60,17 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->role === 'siswa';
     }
+
+    public function ownsLoan(Loan $loan): bool
+    {
+        if (! $this->isSiswa()) {
+            return true;
+        }
+
+        if ($this->nis && $loan->nis === $this->nis) {
+            return true;
+        }
+
+        return (bool) ($this->student_id && (int) $loan->student_id === (int) $this->student_id);
+    }
 }

@@ -19,6 +19,11 @@ class Student extends Model
         return $this->hasMany(Loan::class);
     }
 
+    public function activeLoans(): HasMany
+    {
+        return $this->hasMany(Loan::class)->where('status', 'aktif');
+    }
+
     public function label(): string
     {
         return ($this->nis ? $this->nis.' — ' : '').$this->nama.' ('.$this->kelas.')';

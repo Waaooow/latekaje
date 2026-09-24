@@ -173,7 +173,7 @@ Yang wajib diperhatikan (selengkapnya lihat `.env.example`):
 
 ```env
 APP_URL=https://domain-anda          # HARUS https publik di produksi
-APP_LOCALE=id                        # default; bisa diganti per-user lewat Setting → Bahasa
+APP_LOCALE=id                        # default; bisa diganti global lewat Setting → Bahasa
 DB_CONNECTION=mysql
 DB_DATABASE=latekaje
 DB_PREFIX=                           # kosongkan bila DB khusus app ini

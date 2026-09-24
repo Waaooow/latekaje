@@ -76,7 +76,14 @@ class UnreturnedTable extends BaseWidget
                     ->badge()
                     ->color('info')
                     ->copyable()
-                    ->visible(fn () => ! auth()->user()?->isSiswa()),
+                    ->visible(fn () => ! auth()->user()?->isSiswa() || filled(auth()->user()?->nis) || filled(auth()->user()?->student_id))
+                    ->formatStateUsing(function (?string $state, $record): string {
+                        if (! $state) {
+                            return '-';
+                        }
+
+                        return auth()->user()?->ownsLoan($record) ?? false ? $state : '••••••';
+                    }),
             ])
             ->paginated([10, 25, 50])
             ->defaultPaginationPageOption(10);

@@ -50,7 +50,14 @@ class LoansTable
                     ->badge()
                     ->color('info')
                     ->copyable()
-                    ->visible(fn () => ! auth()->user()?->isSiswa()),
+                    ->visible(fn () => ! auth()->user()?->isSiswa() || filled(auth()->user()?->nis) || filled(auth()->user()?->student_id))
+                    ->formatStateUsing(function (?string $state, $record): string {
+                        if (! $state) {
+                            return '-';
+                        }
+
+                        return auth()->user()?->ownsLoan($record) ?? false ? $state : '••••••';
+                    }),
 
                 TextColumn::make('tanggal_pinjam')
                     ->label(__('loans.col_borrowed_at'))
@@ -151,7 +158,16 @@ class LoansTable
                         TextInput::make('returned_by')
                             ->label(__('loans.form_returned_by_label'))
                             ->required()
-                            ->placeholder(__('loans.form_returned_by_placeholder')),
+                            ->placeholder(__('loans.form_returned_by_placeholder'))
+                            ->default(function () {
+                                $user = auth()->user();
+
+                                if ($user?->isSiswa() && ($user->nis || $user->student_id)) {
+                                    return $user->student?->nama ?? $user->name;
+                                }
+
+                                return null;
+                            }),
 
                         Select::make('return_relation')
                             ->label(__('loans.form_relation_label'))

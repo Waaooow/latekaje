@@ -13,7 +13,7 @@ use Filament\Pages\Page;
 
 class NotificationSettings extends Page
 {
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-bell';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
     public static function getNavigationLabel(): string
     {

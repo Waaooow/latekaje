@@ -93,9 +93,9 @@ class StudentResource extends Resource
                     ->label(__('students.active_label'))
                     ->boolean(),
 
-                TextColumn::make('loans_count')
+                TextColumn::make('active_loans_count')
                     ->label(__('students.loans_label'))
-                    ->counts('loans')
+                    ->counts('activeLoans')
                     ->badge()
                     ->sortable(),
             ])

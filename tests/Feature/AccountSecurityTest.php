@@ -12,21 +12,21 @@ class AccountSecurityTest extends TestCase
     {
         $tool = User::firstOrCreate(
             ['email' => 'tool-tes@latekaje.net'],
-            ['name' => 'Tool Tes', 'password' => 'x', 'role' => 'toolman', 'is_active' => true],
+            ['name' => 'Tool Tes', 'password' => 'x', 'role' => 'admin', 'is_active' => true],
         );
-        $siswa = User::firstOrCreate(
-            ['email' => 'siswa-tes@latekaje.net'],
-            ['name' => 'Siswa Tes', 'password' => 'x', 'role' => 'siswa', 'is_active' => true],
+        $anggota = User::firstOrCreate(
+            ['email' => 'anggota-tes@latekaje.net'],
+            ['name' => 'Anggota Tes', 'password' => 'x', 'role' => 'users', 'is_active' => true],
         );
 
         // 1. Nonaktifkan -> login ditolak walau password benar
-        $siswa->update(['is_active' => false]);
+        $anggota->update(['is_active' => false]);
         $this->assertFalse(\Illuminate\Support\Facades\Auth::attempt(
-            ['email' => 'siswa-tes@latekaje.net', 'password' => 'x']
+            ['email' => 'anggota-tes@latekaje.net', 'password' => 'x']
         ), 'akun nonaktif lolos login!');
-        $siswa->update(['is_active' => true]);
+        $anggota->update(['is_active' => true]);
         $this->assertTrue(\Illuminate\Support\Facades\Auth::attempt(
-            ['email' => 'siswa-tes@latekaje.net', 'password' => 'x']
+            ['email' => 'anggota-tes@latekaje.net', 'password' => 'x']
         ), 'akun aktif ditolak!');
 
         // 2. Token sanctum dibuat & bisa dicabut
@@ -42,11 +42,11 @@ class AccountSecurityTest extends TestCase
         if (! $item) {
             $this->markTestSkipped('Tidak ada asset item tanpa pinjaman untuk test ACL');
         }
-        $this->assertTrue(Gate::allows('delete', $item), 'toolman seharusnya boleh hapus');
+        $this->assertTrue(Gate::allows('delete', $item), 'admin seharusnya boleh hapus');
         $tool->update(['permissions' => ['deny' => ['delete:AssetItem']]]);
         $this->assertFalse(Gate::allows('delete', $item), 'deny ACL tidak berlaku!');
         $tool->update(['permissions' => null]);
-        $this->assertTrue(Gate::allows('delete', $item), 'toolman seharusnya boleh hapus');
+        $this->assertTrue(Gate::allows('delete', $item), 'admin seharusnya boleh hapus');
         $tool->update(['permissions' => ['deny' => ['delete:AssetItem']]]);
         $this->assertFalse(Gate::allows('delete', $item), 'deny ACL tidak berlaku!');
         $tool->update(['permissions' => null]);

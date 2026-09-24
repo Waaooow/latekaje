@@ -36,8 +36,8 @@
                 } catch (err) {}
 
                 var msg = e.kind === 'return'
-                    ? @json(__('loans.ws_toast_return')).replace(':borrower', e.borrower).replace(':code', e.itemCode)
-                    : @json(__('loans.ws_toast_borrow')).replace(':borrower', e.borrower).replace(':kelas', e.kelas).replace(':code', e.itemCode);
+                    ? @json(__('loans.ws_toast_return')).replace(':borrower', e.borrower_name).replace(':code', e.itemCode)
+                    : @json(__('loans.ws_toast_borrow')).replace(':borrower', e.borrower_name).replace(':group', e.group).replace(':code', e.itemCode);
                 toast(msg);
             });
         } catch (err) {}

@@ -7,13 +7,14 @@ return [
     // Form
     'name_label' => 'Nama',
     'email_label' => 'Email',
-    'nis_label' => 'NIS',
-    'nis_placeholder' => 'Khusus akun siswa',
+    'code_label' => 'ID Anggota',
+    'code_placeholder' => 'Khusus akun anggota',
     'role_label' => 'Role',
     'role_superadmin' => 'Superadmin',
-    'role_toolman' => 'Toolman',
-    'role_anak_pkl' => 'Anak PKL',
-    'role_siswa' => 'Siswa',
+    'role_admin' => 'Admin',
+    'role_assistant' => 'Asisten',
+    'role_staff' => 'Staff',
+    'role_users' => 'Anggota',
     'account_active_label' => 'Akun aktif',
     'account_active_helper' => 'Matikan untuk memblokir login tanpa menghapus akun.',
     'perm_allow_label' => 'Hak khusus: IZINKAN (di luar role)',
@@ -22,7 +23,7 @@ return [
     'password_helper_edit' => 'Kosongkan bila tidak diganti.',
 
     // Table
-    'student_data_label' => 'Data Siswa',
+    'member_data_label' => 'Data Anggota',
     'created_label' => 'Dibuat',
 
     // Toggle-active action

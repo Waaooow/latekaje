@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -42,6 +43,12 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->widgets([])
+            ->navigationGroups([
+                NavigationGroup::make(fn (): string => __('common.nav_group_transactions')),
+                NavigationGroup::make(fn (): string => __('common.nav_group_master')),
+                NavigationGroup::make(fn (): string => __('common.nav_group_reports')),
+                NavigationGroup::make(fn (): string => __('common.nav_group_system')),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

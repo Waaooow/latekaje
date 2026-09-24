@@ -26,7 +26,7 @@ class SendRecap extends Command
         if (! $this->option('send')) {
             $this->info(__('recap.console_list', ['count' => count($items)]));
             foreach ($items as $it) {
-                $this->line('- '.$it['qr'].' | '.$it['peminjam'].' ('.$it['kelas'].') | '.$it['hari'].' hari');
+                $this->line('- '.$it['qr'].' | '.$it['borrower'].' ('.$it['group'].') | '.$it['hari'].' hari');
             }
 
             return self::SUCCESS;

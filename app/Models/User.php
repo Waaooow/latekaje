@@ -10,14 +10,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'nis', 'student_id', 'password', 'role', 'is_active', 'permissions'])]
+#[Fillable(['name', 'email', 'code', 'member_id', 'password', 'role', 'is_active', 'permissions'])]
 class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens;
     use HasFactory;
     use Notifiable;
 
-    protected $fillable = ['name', 'email', 'nis', 'student_id', 'password', 'role', 'is_active', 'permissions'];
+    protected $fillable = ['name', 'email', 'code', 'member_id', 'password', 'role', 'is_active', 'permissions'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -36,9 +36,9 @@ class User extends Authenticatable implements FilamentUser
         return true;
     }
 
-    public function student(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function member(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Member::class);
     }
 
     public function isSuperadmin(): bool
@@ -46,31 +46,36 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === 'superadmin';
     }
 
-    public function isToolman(): bool
+    public function isAdmin(): bool
     {
-        return $this->role === 'toolman';
+        return $this->role === 'admin';
     }
 
-    public function isAnakPkl(): bool
+    public function isStaff(): bool
     {
-        return $this->role === 'anak_pkl';
+        return $this->role === 'staff';
     }
 
-    public function isSiswa(): bool
+    public function isAssistant(): bool
     {
-        return $this->role === 'siswa';
+        return $this->role === 'assistant';
+    }
+
+    public function isBorrower(): bool
+    {
+        return $this->role === 'users';
     }
 
     public function ownsLoan(Loan $loan): bool
     {
-        if (! $this->isSiswa()) {
+        if (! $this->isBorrower()) {
             return true;
         }
 
-        if ($this->nis && $loan->nis === $this->nis) {
+        if ($this->code && $loan->code === $this->code) {
             return true;
         }
 
-        return (bool) ($this->student_id && (int) $loan->student_id === (int) $this->student_id);
+        return (bool) ($this->member_id && (int) $loan->member_id === (int) $this->member_id);
     }
 }

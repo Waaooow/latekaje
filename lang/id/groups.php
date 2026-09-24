@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'model_label' => 'Kelas',
-    'model_plural' => 'Kelas',
+    'model_label' => 'Grup',
+    'model_plural' => 'Grup',
 
     // Form
     'code_label' => 'Kode',
@@ -11,13 +11,14 @@ return [
     'display_name_placeholder' => 'cth: X TJKT 1, Tamu / Eksternal',
 
     // Table
-    'class_label' => 'Kelas',
+    'group_label' => 'Grup',
     'code_column' => 'Kode',
     'total_loans_label' => 'Total Pinjam',
+    'active_borrowers_label' => 'Total Peminjam',
 
     // Pages
-    'create_action' => 'Tambah Kelas',
+    'create_action' => 'Tambah Grup',
 
     // Abilities
-    'ability_view_any' => 'Lihat Kelas',
+    'ability_view_any' => 'Lihat Grup',
 ];

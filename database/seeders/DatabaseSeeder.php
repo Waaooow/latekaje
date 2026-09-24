@@ -5,8 +5,8 @@ namespace Database\Seeders;
 use App\Models\Asset;
 use App\Models\AssetItem;
 use App\Models\Location;
-use App\Models\SchoolClass;
-use App\Models\Student;
+use App\Models\Group;
+use App\Models\Member;
 use App\Models\User;
 use App\Services\LoanService;
 use Illuminate\Database\Seeder;
@@ -61,9 +61,9 @@ class DatabaseSeeder extends Seeder
             ['1001', 'Budi Santoso', 'X TJKT 1'],
             ['1002', 'Siti Aminah', 'X TJKT 1'],
             ['1003', 'Andi Pratama', 'X TJKT 2'],
-        ] as [$nis, $nama, $kelas]) {
-            SchoolClass::firstOrCreate(['key' => \Illuminate\Support\Str::slug($kelas, '_')], ['label' => $kelas]);
-            Student::firstOrCreate(['nis' => $nis], ['nama' => $nama, 'kelas' => $kelas, 'aktif' => true]);
+        ] as [$code, $name, $group]) {
+            Group::firstOrCreate(['key' => \Illuminate\Support\Str::slug($group, '_')], ['label' => $group]);
+            Member::firstOrCreate(['code' => $code], ['name' => $name, 'group' => $group, 'aktif' => true]);
         }
 
         foreach ([
@@ -76,7 +76,7 @@ class DatabaseSeeder extends Seeder
             'guru_staf' => 'GURU / STAF',
             'tamu_eksternal' => 'Tamu / Eksternal',
         ] as $key => $label) {
-            SchoolClass::firstOrCreate(['key' => $key], ['label' => $label]);
+            Group::firstOrCreate(['key' => $key], ['label' => $label]);
         }
 
         if (env('SEED_DEMO', true)) {

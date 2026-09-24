@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\SchoolClasses\Pages;
+namespace App\Filament\Resources\Groups\Pages;
 
-use App\Filament\Resources\SchoolClasses\SchoolClassResource;
+use App\Filament\Resources\Groups\GroupResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditSchoolClass extends EditRecord
+class EditGroup extends EditRecord
 {
-    protected static string $resource = SchoolClassResource::class;
+    protected static string $resource = GroupResource::class;
 
     protected function getHeaderActions(): array
     {

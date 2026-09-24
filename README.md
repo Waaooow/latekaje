@@ -34,7 +34,7 @@ Alur inti aplikasi hanya dua transaksi:
 PINJAM (3 langkah di form kiosk)
   1. Scan QR alat (webcam) atau ketik kode manual → sistem validasi
      (terdaftar? tidak sedang dipinjam? kondisi baik?)
-  2. Pilih siswa (ketik nama/NIS) → NIS + nama + kelas terisi otomatis
+  2. Pilih anggota (ketik nama/ID, bisa diketik manual) → ID + nama + grup terisi otomatis (dapat diubah)
   3. Tentukan PIN 6 digit → catat/foto PIN ini
 
 KEMBALI (modal aksi di tabel Peminjaman)
@@ -74,20 +74,20 @@ Aksi baris dikelompokkan dalam dropdown (ramah mobile).
 Import dua mode: satuan (per SN) atau massal (`jumlah` + `lokasi`).
 
 ### Peminjaman & Pengembalian
-Lihat alur di atas. Siswa login pribadi **langsung diarahkan ke halaman Peminjaman**
-dan hanya melihat pinjamannya sendiri; akun kiosk generik (tanpa NIS) melihat semua.
+Lihat alur di atas. Anggota login pribadi **langsung diarahkan ke halaman Peminjaman**
+dan hanya melihat pinjamannya sendiri; akun kiosk generik (tanpa ID) melihat semua.
 
-### Master: Lokasi, Kelas, Siswa
-Dikelola superadmin/toolman (dropdown di form otomatis mengikuti).
-Siswa: NIS unik, import CSV + template, tombol **Buat Akun** per baris
-(login = NIS, password awal = NIS, wajib diganti di Profil).
+### Master: Lokasi, Grup, Anggota
+Dikelola superadmin/admin (dropdown di form otomatis mengikuti).
+Anggota: ID unik, import CSV + template, tombol **Buat Akun** per baris
+(login = ID, password awal = ID, wajib diganti di Profil).
 
 ### Kelola User
-Filter role, kolom NIS + data siswa tertaut, ubah password, toggle
+Filter role, kolom ID + data anggota tertaut, ubah password, toggle
 **Akun aktif** (blokir login tanpa hapus akun), hapus, dan **ACL khusus per user**
 (izinkan/larang 20 hak individual yang menimpa role — khusus superadmin).
 
-### Setting (khusus superadmin/toolman)
+### Setting (khusus superadmin/admin)
 - **Bahasa Aplikasi:** Indonesia / English — berlaku global, tersimpan di database.
 - **Aplikasi:** Mode Perawatan (dengan modal konfirmasi, superadmin tetap bisa masuk).
 - **API:** buat/cabut token Sanctum (Bearer) untuk integrasi luar.
@@ -100,7 +100,7 @@ Filter role, kolom NIS + data siswa tertaut, ubah password, toggle
 ### Cetak QR & Export
 - `/print-qr?ids=all|1,2,3` → stiker QR siap cetak.
 - Export rekap Peminjaman ke **XLSX (prioritas)** / CSV — hanya superadmin,
-  toolman, anak PKL.
+  admin, staff, assistant.
 
 ### Realtime (opsional)
 Laravel Reverb: tabel + dashboard refresh sendiri dan toast notifikasi
@@ -111,17 +111,18 @@ saat ada transaksi dari perangkat lain. Tanpa Reverb, listener diam
 
 ## 3. Hak Akses & Keamanan
 
-| Kemampuan | superadmin | toolman | anak_pkl | siswa |
-|---|---|---|---|---|
-| Kelola User / ACL / Setting / API | ✅ | ❌ | ❌ | ❌ |
-| Kelola master (Aset, Lokasi, Kelas, Siswa) | ✅ | ✅ | ➖ (unit+siswa saja) | ❌ |
-| Tambah/ubah unit, hapus (bila tak ada pinjaman aktif) | ✅ | ✅ | ➖ (tanpa hapus) | ❌ |
-| Pinjam untuk siapa pun | ✅ | ✅ | ✅ | 🔒 milik sendiri |
-| Kembalikan + Export rekap | ✅ | ✅ | ✅ | ❌ |
-| Lihat pinjaman | semua | semua | semua | milik sendiri |
+| Kemampuan | superadmin | admin | staff | assistant | users |
+|---|---|---|---|---|---|
+| Kelola User / ACL / Setting / API | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Kelola master (Aset, Lokasi, Grup, Anggota) | ✅ | ✅ | ➖ (unit+anggota saja) | ❌ | ❌ |
+| Tambah/ubah unit, hapus (bila tak ada pinjaman aktif) | ✅ | ✅ | ➖ (tanpa hapus) | ❌ | ❌ |
+| Pinjam alat (kecuali superadmin) | ❌ | ✅ | ✅ | ✅ | 🔒 milik sendiri |
+| Tutup paksa pinjaman | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Kembalikan + Export rekap | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Lihat pinjaman | semua | semua | semua | semua | milik sendiri |
 
-- Login: **NIS atau email** + password (`NisUserProvider`).
-- Password: hashing bcrypt; password default NIS **wajib diganti** di Profil.
+- Login: **ID atau email** + password (`CodeUserProvider`).
+- Password: hashing bcrypt; password default ID **wajib diganti** di Profil.
 - Kredensial awal **hanya** via env `SUPERADMIN_*` (seeder menolak password default
   bila env kosong → dibuat acak + peringatan).
 - File yang tidak boleh masuk git: `.env`, `*.bak`, `ssl-v2/`, `*.log`,
@@ -190,17 +191,17 @@ SEED_DEMO=false                          # false untuk produksi
 
 ## 7. Struktur Database
 
-Entitas inti: `users` ⇄ `students` → `loans` ⇄ `asset_items` → `assets` (+ `locations`).
+Entitas inti: `users` ⇄ `members` → `loans` ⇄ `asset_items` → `assets` (+ `locations`, `groups`).
 
 - `assets` — katalog (kode_aset unik, nama, jenis, spesifikasi, kegunaan).
 - `asset_items` — unit fisik (`nomor_seri_atau_qr` unik, status tersedia/dipinjam,
   kondisi baik/rusak/rusak_total, `location_id`). Kolom `stok` diabaikan
   (total dihitung real-time, bukan disimpan).
 - `loans` — transaksi (`asset_item_id` nullable + nullOnDelete agar riwayat utuh,
-  `nis`, `student_id`, `return_pin`, `returned_by`, `return_relation`,
+  `code`, `member_id`, `return_pin`, `returned_by`, `return_relation`,
   `return_method`, `received_by`, `return_photo_path`, kolom guard unik
   `active_item_id` = maks 1 pinjaman aktif per unit).
-- `students` (`nis` unik), `locations`, `school_classes`, `settings` (key-value),
+- `members` (`code` unik), `locations`, `groups`, `settings` (key-value),
   `recap_logs`, `personal_access_tokens` (Sanctum), tabel bawaan
   Filament (imports/exports) + Laravel (sessions/cache/jobs).
 
@@ -211,8 +212,8 @@ Entitas inti: `users` ⇄ `students` → `loans` ⇄ `asset_items` → `assets` 
 | Tugas | Cara |
 |---|---|
 | Tambah 10 unit sejenis | Tabel Aset → **Tambah Unit** → isi jumlah (+ SN bila ada) |
-| Daftarkan siswa baru/rombongan | Menu Siswa → **Template CSV** → isi → **Import** (kolom `password` opsional) |
-| Buatkan login siswa | Baris siswa → **Buat Akun** (info NIS + password awal tampil sekali) |
+| Daftarkan anggota baru/rombongan | Menu Anggota → **Template CSV** → isi → **Import** (kolom `password` opsional) |
+| Buatkan login anggota | Baris anggota → **Buat Akun** (info ID + password awal tampil sekali) |
 | Rekap belum kembali | Widget **Belum Kembali** / perintah `php artisan recap:unreturned` (`--send` untuk kirim) |
 | Blokir akun bermasalah | Kelola User → toggle **Akun aktif** / tombol Nonaktifkan |
 | Tutup darurat | Setting → **Mode Perawatan** (konfirmasi dulu; superadmin tetap bisa masuk) |
@@ -231,7 +232,7 @@ Entitas inti: `users` ⇄ `students` → `loans` ⇄ `asset_items` → `assets` 
 | Login GOWA 401 / kirim gagal | Cek base URL **tanpa path** (cth: `http://host:3000`), user+pass basic auth, dan device ter-pairing. Bila server tak sejaringan dengan GOWA, isi **Relay URL + Secret**. Pesan error kini berlabel `[via relay]`/`[direct]` agar jelas jalurnya. |
 | Webhook 400 `phone cannot be blank` | URL webhook diarahkan ke endpoint GOWA (`/send/message`). Webhook Umum hanya untuk penerima generik (n8n/bot). Untuk WA pakai bagian GOWA. |
 | Redirect ke `http://` setelah login | `APP_URL` harus `https://...` + `trustProxies` aktif; di belakang proxy pastikan header `X-Forwarded-Proto` diteruskan. |
-| Tabel kosong padahal data ada | Cek `DB_PREFIX` (salah prefix = baca tabel чужой), dan role user (siswa hanya melihat miliknya). |
+| Tabel kosong padahal data ada | Cek `DB_PREFIX` (salah prefix = baca tabel чужой), dan role user (anggota hanya melihat miliknya). |
 | Scheduler rekap tidak jalan | Pastikan cron `schedule:run` terpasang dan `recap_enabled=1` + kanal (GOWA/webhook) aktif di Setting. Lihat **Riwayat Pengiriman**. |
 | `419 Page Expired` di form | Sesi habis / `APP_KEY` berubah — login ulang. |
 
@@ -243,7 +244,7 @@ Entitas inti: `users` ⇄ `students` → `loans` ⇄ `asset_items` → `assets` 
 php artisan test
 ```
 
-Cakupan: smoke 10 halaman admin, login NIS + scope pribadi, regresi kiosk
+Cakupan: smoke 10 halaman admin, login ID + scope pribadi, regresi kiosk
 generik, redirect role, keamanan akun (blokir login, ACL deny, token),
 listener WS, redirect root. Test yang butuh data spesifik akan **skip**
 (secara eksplisit, bukan gagal) bila data tak ada.

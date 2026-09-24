@@ -8,16 +8,16 @@ use Tests\TestCase;
 
 class LoginRedirectTest extends TestCase
 {
-    public function test_siswa_langsung_ke_peminjaman(): void
+    public function test_anggota_langsung_ke_peminjaman(): void
     {
-        $siswa = User::firstOrCreate(
-            ['email' => 'siswa-tes@latekaje.net'],
-            ['name' => 'Siswa Tes', 'password' => bcrypt('x'), 'role' => 'siswa'],
+        $anggota = User::firstOrCreate(
+            ['email' => 'anggota-tes@latekaje.net'],
+            ['name' => 'Anggota Tes', 'password' => bcrypt('x'), 'role' => 'users'],
         );
-        $this->actingAs($siswa);
+        $this->actingAs($anggota);
 
         $target = (new LoginResponse)->toResponse(request())->getTargetUrl();
-        echo "siswa -> $target\n";
+        echo "anggota -> $target\n";
         $this->assertStringEndsWith('/admin/loans', $target);
 
         $admin = User::where('email', 'admin@latekaje.net')->first()

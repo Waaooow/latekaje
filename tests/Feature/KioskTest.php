@@ -13,18 +13,18 @@ class KioskTest extends TestCase
     {
         $kiosk = User::firstOrCreate(
             ['email' => 'kiosk@latekaje.net'],
-            ['name' => 'Kiosk Lab', 'password' => 'kiosk123', 'role' => 'siswa'],
+            ['name' => 'Kiosk Lab', 'password' => 'kiosk123', 'role' => 'users'],
         );
         // Self-heal stale rows from earlier runs (firstOrCreate never overwrites).
-        $kiosk->forceFill(['password' => 'kiosk123', 'role' => 'siswa'])->save();
-        $kiosk->update(['nis' => null, 'student_id' => null]);
+        $kiosk->forceFill(['password' => 'kiosk123', 'role' => 'users'])->save();
+        $kiosk->update(['code' => null, 'member_id' => null]);
 
         $this->assertTrue(Auth::attempt(['email' => 'kiosk@latekaje.net', 'password' => 'kiosk123']), 'login kiosk gagal');
         $this->actingAs($kiosk);
 
         $sql = LoanResource::getEloquentQuery()->toSql();
         echo "kiosk scope: $sql\n";
-        $this->assertStringNotContainsString('nis', $sql, 'kiosk harus lihat semua');
+        $this->assertStringNotContainsString('code', $sql, 'kiosk harus lihat semua');
 
         $target = (new \App\Http\Responses\LoginResponse)->toResponse(request())->getTargetUrl();
         $this->assertStringEndsWith('/admin/loans', $target);

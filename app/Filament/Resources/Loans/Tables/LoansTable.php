@@ -30,8 +30,8 @@ class LoansTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('nis')
-                    ->label(__('loans.col_nis'))
+                TextColumn::make('code')
+                    ->label(__('loans.col_code'))
                     ->badge()
                     ->color('gray')
                     ->copyable()
@@ -39,9 +39,9 @@ class LoansTable
                     ->placeholder('-')
                     ->toggleable(),
 
-                TextColumn::make('nama_siswa')
+                TextColumn::make('borrower_name')
                     ->label(__('loans.col_borrower'))
-                    ->description(fn ($record) => $record->kelas)
+                    ->description(fn ($record) => $record->group)
                     ->searchable()
                     ->sortable(),
 
@@ -50,7 +50,7 @@ class LoansTable
                     ->badge()
                     ->color('info')
                     ->copyable()
-                    ->visible(fn () => ! auth()->user()?->isSiswa() || filled(auth()->user()?->nis) || filled(auth()->user()?->student_id))
+                    ->visible(fn () => auth()->user()?->role !== 'users' || filled(auth()->user()?->code) || filled(auth()->user()?->member_id))
                     ->formatStateUsing(function (?string $state, $record): string {
                         if (! $state) {
                             return '-';
@@ -112,13 +112,45 @@ class LoansTable
             ->headerActions([
                 ExportAction::make()
                     ->exporter(LoanExporter::class)
-                    ->visible(fn (): bool => in_array(auth()->user()?->role, ['superadmin', 'toolman', 'anak_pkl'], true))
+                    ->visible(fn (): bool => in_array(auth()->user()?->role, ['superadmin', 'admin', 'staff', 'assistant'], true))
                     ->formats([ExportFormat::Xlsx, ExportFormat::Csv])
                     ->label(__('loans.export_recap'))
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('success'),
             ])
             ->recordActions([
+                Action::make('forceClose')
+                    ->label(__('loans.action_force_close'))
+                    ->icon('heroicon-o-bolt')
+                    ->color('danger')
+                    ->visible(fn ($record): bool => $record->status === 'aktif' && (bool) auth()->user()?->isSuperadmin())
+                    ->requiresConfirmation()
+                    ->modalHeading(__('loans.force_close_heading'))
+                    ->modalDescription(__('loans.force_close_desc'))
+                    ->schema([
+                        TextInput::make('received_by')
+                            ->label(__('loans.form_received_by_label'))
+                            ->required()
+                            ->default(fn () => auth()->user()?->name),
+
+                        TextInput::make('returned_by')
+                            ->label(__('loans.form_returned_by_label'))
+                            ->placeholder(__('loans.form_returned_by_placeholder')),
+                    ])
+                    ->action(function ($record, array $data): void {
+                        abort_unless((bool) auth()->user()?->isSuperadmin(), 403);
+
+                        LoanService::forceClose(
+                            $record,
+                            (string) ($data['received_by'] ?? ''),
+                            isset($data['returned_by']) && $data['returned_by'] !== '' ? (string) $data['returned_by'] : null,
+                        );
+
+                        Notification::make()
+                            ->title(__('loans.force_closed_title'))
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('kembalikan')
                     ->label(__('loans.action_return'))
                     ->icon('heroicon-o-check-circle')
@@ -162,8 +194,8 @@ class LoansTable
                             ->default(function () {
                                 $user = auth()->user();
 
-                                if ($user?->isSiswa() && ($user->nis || $user->student_id)) {
-                                    return $user->student?->nama ?? $user->name;
+                                if ($user && ($user->member_id || $user->code)) {
+                                    return $user->member?->name ?? $user->name;
                                 }
 
                                 return null;
@@ -212,7 +244,7 @@ class LoansTable
 
                         Notification::make()
                             ->title(__('loans.returned_title'))
-                            ->body(__('loans.returned_body', ['name' => $record->nama_siswa]))
+                            ->body(__('loans.returned_body', ['name' => $record->borrower_name]))
                             ->success()
                             ->send();
                     }),

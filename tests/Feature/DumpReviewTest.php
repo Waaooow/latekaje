@@ -23,7 +23,8 @@ class DumpReviewTest extends TestCase
             '/admin/asset-items' => 'items',
             '/admin/assets' => 'assets',
             '/admin/locations' => 'locations',
-            '/admin/school-classes' => 'classes',
+            '/admin/members' => 'students',
+            '/admin/groups' => 'classes',
             '/admin/data-per-lokasi' => 'lokasi',
             '/admin/setting' => 'notif',
         ];

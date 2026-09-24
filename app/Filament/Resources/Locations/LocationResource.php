@@ -36,12 +36,17 @@ class LocationResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('common.nav_group_master');
+    }
+
     public static function getNavigationLabel(): string
     {
         return __('locations.model_label');
     }
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 14;
 
     public static function form(Schema $schema): Schema
     {

@@ -63,7 +63,7 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'nis-eloquent',
+            'driver' => 'code-eloquent',
             'model' => env('AUTH_MODEL', User::class),
         ],
 

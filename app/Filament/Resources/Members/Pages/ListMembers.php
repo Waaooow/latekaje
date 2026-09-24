@@ -1,31 +1,31 @@
 <?php
 
-namespace App\Filament\Resources\Students\Pages;
+namespace App\Filament\Resources\Members\Pages;
 
-use App\Filament\Imports\StudentImporter;
-use App\Filament\Resources\Students\StudentResource;
+use App\Filament\Imports\MemberImporter;
+use App\Filament\Resources\Members\MemberResource;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\ImportAction;
 use Filament\Resources\Pages\ListRecords;
 
-class ListStudents extends ListRecords
+class ListMembers extends ListRecords
 {
-    protected static string $resource = StudentResource::class;
+    protected static string $resource = MemberResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label(__('students.create_action')),
+            CreateAction::make()->label(__('members.create_action')),
             ImportAction::make()
-                ->importer(StudentImporter::class)
+                ->importer(MemberImporter::class)
                 ->label(__('common.import')),
             Action::make('downloadTemplateCsv')
                 ->label(__('common.template_csv'))
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
                 ->action(function () {
-                    $headers = ['nis', 'nama', 'kelas'];
+                    $headers = ['code', 'name', 'group'];
                     $rows = [
                         ['1001', 'Budi Santoso', 'X TJKT 1'],
                         ['1002', 'Siti Aminah', 'X TJKT 1'],
@@ -41,7 +41,7 @@ class ListStudents extends ListRecords
                         }
 
                         fclose($out);
-                    }, 'template-import-siswa.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+                    }, 'template-import-member.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
                 }),
         ];
     }

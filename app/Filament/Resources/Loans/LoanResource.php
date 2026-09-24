@@ -8,8 +8,10 @@ use App\Filament\Resources\Loans\Pages\ListLoans;
 use App\Filament\Resources\Loans\Schemas\LoanForm;
 use App\Filament\Resources\Loans\Tables\LoansTable;
 use App\Models\Loan;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -17,9 +19,16 @@ class LoanResource extends Resource
 {
     protected static ?string $model = Loan::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
-    protected static ?string $recordTitleAttribute = 'nama_siswa';
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $recordTitleAttribute = 'borrower_name';
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return __('common.nav_group_transactions');
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -41,15 +50,15 @@ class LoanResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        // Siswa pribadi hanya melihat pinjamannya sendiri.
-        // Akun kiosk generik (tanpa NIS) tetap melihat semua.
-        if ($user?->isSiswa() && ($user->nis || $user->student_id)) {
+        // Akun peminjam pribadi (role users + identitas) hanya melihat
+        // pinjamannya sendiri. Staf dan akun kiosk generik melihat semua.
+        if ($user?->role === 'users' && ($user->code || $user->member_id)) {
             $query->where(function (Builder $w) use ($user) {
-                if ($user->nis) {
-                    $w->orWhere('nis', $user->nis);
+                if ($user->code) {
+                    $w->orWhere('code', $user->code);
                 }
-                if ($user->student_id) {
-                    $w->orWhere('student_id', $user->student_id);
+                if ($user->member_id) {
+                    $w->orWhere('member_id', $user->member_id);
                 }
             });
         }

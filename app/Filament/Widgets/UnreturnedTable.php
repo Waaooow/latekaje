@@ -35,7 +35,7 @@ class UnreturnedTable extends BaseWidget
                     ->label(__('recap.send_now'))
                     ->icon('heroicon-o-paper-airplane')
                     ->color('info')
-                    ->visible(fn (): bool => in_array(auth()->user()?->role, ['superadmin', 'toolman', 'anak_pkl'], true))
+                    ->visible(fn (): bool => in_array(auth()->user()?->role, ['superadmin', 'admin', 'staff', 'assistant'], true))
                     ->action(function (): void {
                         $result = RecapService::sendNow();
 
@@ -60,9 +60,9 @@ class UnreturnedTable extends BaseWidget
                     ->label(__('dashboard.col_tool'))
                     ->searchable(),
 
-                TextColumn::make('nama_siswa')
+                TextColumn::make('borrower_name')
                     ->label(__('dashboard.col_borrower'))
-                    ->description(fn ($record) => $record->kelas)
+                    ->description(fn ($record) => $record->group)
                     ->searchable(),
 
                 TextColumn::make('lama_pinjam')
@@ -76,7 +76,7 @@ class UnreturnedTable extends BaseWidget
                     ->badge()
                     ->color('info')
                     ->copyable()
-                    ->visible(fn () => ! auth()->user()?->isSiswa() || filled(auth()->user()?->nis) || filled(auth()->user()?->student_id))
+                    ->visible(fn () => ! auth()->user()?->isBorrower() || filled(auth()->user()?->code) || filled(auth()->user()?->member_id))
                     ->formatStateUsing(function (?string $state, $record): string {
                         if (! $state) {
                             return '-';

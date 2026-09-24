@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Loans\Schemas;
 
 use App\Models\AssetItem;
-use App\Models\SchoolClass;
-use App\Models\Student;
+use App\Models\Group;
+use App\Models\Member;
 use Closure;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -17,16 +17,36 @@ use Illuminate\Support\HtmlString;
 
 class LoanForm
 {
-    private static function lockedToSelf(): bool
+    private static function selfMember(): ?\App\Models\Member
+    {
+        return auth()->user()?->member;
+    }
+
+    private static function selfName(): ?string
     {
         $user = auth()->user();
 
-        return (bool) ($user?->isSiswa() && ($user->student_id || $user->nis));
+        if (! $user || (! $user->member_id && ! $user->code)) {
+            return null;
+        }
+
+        return self::selfMember()?->name ?? $user->name;
     }
 
-    private static function selfStudent(): ?\App\Models\Student
+    private static function selfGroup(): ?string
     {
-        return auth()->user()?->student;
+        $user = auth()->user();
+
+        if (! $user || (! $user->member_id && ! $user->code)) {
+            return null;
+        }
+
+        return self::selfMember()?->group;
+    }
+
+    private static function selfCode(): ?string
+    {
+        return auth()->user()?->code;
     }
 
     public static function configure(Schema $schema): Schema
@@ -173,60 +193,57 @@ class LoanForm
                             </div>
                         ')),
 
-                    Select::make('student_id')
-                        ->label(__('loans.select_student'))
-                        ->disabled(fn (): bool => self::lockedToSelf())
-                        ->default(fn () => auth()->user()?->student_id)
+                    Select::make('member_id')
+                        ->label(__('loans.select_member'))
+                        ->default(fn () => auth()->user()?->member_id)
                         ->searchable()
-                        ->options(fn () => Student::where('aktif', true)->orderBy('nama')->get()->mapWithKeys(fn ($st) => [$st->id => $st->label()]))
+                        ->options(fn () => Member::where('aktif', true)->orderBy('name')->get()->mapWithKeys(fn ($st) => [$st->id => $st->label()]))
                         ->afterStateUpdated(function (Set $set, $state): void {
-                            $st = $state ? Student::find($state) : null;
-                            $set('nis', $st?->nis);
+                            $st = $state ? Member::find($state) : null;
+                            $set('code', $st?->code);
                             if ($st) {
-                                $set('nama_siswa', $st->nama);
-                                $set('kelas', $st->kelas);
+                                $set('borrower_name', $st->name);
+                                $set('group', $st->group);
                             }
                         })
                         ->createOptionForm([
-                            TextInput::make('nis')
-                                ->label(__('loans.nis_label'))
+                            TextInput::make('code')
+                                ->label(__('loans.code_label'))
                                 ->maxLength(64),
-                            TextInput::make('nama')
+                            TextInput::make('name')
                                 ->label(__('loans.full_name'))
                                 ->required()
                                 ->maxLength(255),
-                            Select::make('kelas')
-                                ->label(__('loans.class_label'))
+                            Select::make('group')
+                                ->label(__('loans.group_label'))
                                 ->required()
                                 ->searchable()
-                                ->options(fn () => SchoolClass::orderBy('label')->pluck('label', 'label')),
+                                ->options(fn () => Group::orderBy('label')->pluck('label', 'label')),
                         ])
-                        ->createOptionUsing(fn (array $data): int => Student::create([
-                            'nis' => blank($data['nis'] ?? null) ? null : trim((string) $data['nis']),
-                            'nama' => trim((string) $data['nama']),
-                            'kelas' => $data['kelas'],
+                        ->createOptionUsing(fn (array $data): int => Member::create([
+                            'code' => blank($data['code'] ?? null) ? null : trim((string) $data['code']),
+                            'name' => trim((string) $data['name']),
+                            'group' => $data['group'],
                             'aktif' => true,
                         ])->getKey())
-                        ->helperText(__('loans.helper_new_student')),
+                        ->helperText(__('loans.helper_new_member')),
 
-                    Hidden::make('nis'),
+                    Hidden::make('code'),
 
-                    TextInput::make('nama_siswa')
+                    TextInput::make('borrower_name')
                         ->label(__('loans.full_name'))
-                        ->disabled(fn (): bool => self::lockedToSelf())
-                        ->default(fn () => self::selfStudent()?->nama ?? auth()->user()?->name)
+                        ->default(fn () => self::selfName())
                         ->placeholder(__('loans.name_auto_placeholder'))
                         ->required()
                         ->maxLength(255)
                         ->extraAttributes(['id' => 'loan-nama-field']),
 
-                    Select::make('kelas')
-                        ->label(__('loans.class_origin'))
-                        ->disabled(fn (): bool => self::lockedToSelf())
-                        ->default(fn () => self::selfStudent()?->kelas)
+                    Select::make('group')
+                        ->label(__('loans.group_origin'))
+                        ->default(fn () => self::selfGroup())
                         ->required()
                         ->searchable()
-                        ->options(fn () => SchoolClass::orderBy('label')->pluck('label', 'label'))
+                        ->options(fn () => Group::orderBy('label')->pluck('label', 'label'))
                         ->extraAttributes(['id' => 'loan-kelas-field']),
                 ]),
 

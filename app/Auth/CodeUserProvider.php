@@ -5,10 +5,10 @@ namespace App\Auth;
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 
-class NisUserProvider extends EloquentUserProvider
+class CodeUserProvider extends EloquentUserProvider
 {
     /**
-     * Login menerima NIS atau email di kolom yang sama.
+     * Login menerima ID atau email di kolom yang sama.
      */
     public function retrieveByCredentials(#[\SensitiveParameter] array $credentials)
     {
@@ -24,14 +24,14 @@ class NisUserProvider extends EloquentUserProvider
 
         $query = $this->newModelQuery()
             ->where('email', $login)
-            ->orWhere('nis', $login);
+            ->orWhere('code', $login);
 
         foreach ($credentials as $key => $value) {
             if (str_contains($key, 'password')) {
                 continue;
             }
 
-            if (in_array($key, ['email', 'nis'], true)) {
+            if (in_array($key, ['email', 'code'], true)) {
                 continue;
             }
 

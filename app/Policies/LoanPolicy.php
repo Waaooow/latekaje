@@ -19,16 +19,16 @@ class LoanPolicy
 
     public function create(?User $user): bool
     {
-        return true;
+        return $user !== null && $user->role !== 'superadmin';
     }
 
     public function update(User $user, Loan $loan): bool
     {
-        return $user->role !== 'siswa';
+        return $user->role !== 'users';
     }
 
     public function delete(User $user, Loan $loan): bool
     {
-        return in_array($user->role, ['superadmin', 'toolman'], true);
+        return in_array($user->role, ['superadmin', 'admin'], true);
     }
 }

@@ -23,8 +23,8 @@ class RecapService
                 'loan_id' => $loan->id,
                 'qr' => $loan->assetItem?->nomor_seri_atau_qr ?? '(unit dihapus)',
                 'alat' => $loan->assetItem?->asset?->nama_alat ?? '-',
-                'peminjam' => $loan->nama_siswa,
-                'kelas' => $loan->kelas,
+                'borrower' => $loan->borrower_name,
+                'group' => $loan->group,
                 'tanggal_pinjam' => $loan->tanggal_pinjam,
                 'hari' => max(0, $now->diffInDays($loan->tanggal_pinjam)),
             ])
@@ -44,7 +44,7 @@ class RecapService
             $tgl = $it['tanggal_pinjam'] ? Carbon::parse($it['tanggal_pinjam'])->translatedFormat('d M H:i') : '-';
             $lama = $it['hari'] === 0 ? __('recap.wa_today') : __('recap.wa_days_ago', ['count' => $it['hari']]);
             $lines[] = ($i + 1).'. '.$it['qr'].' ('.$it['alat'].')';
-            $lines[] = '   '.$it['peminjam'].' — '.$it['kelas'];
+            $lines[] = '   '.$it['borrower'].' — '.$it['group'];
             $lines[] = '   '.__('recap.wa_borrowed_line', ['lama' => $lama, 'tgl' => $tgl]);
         }
 
